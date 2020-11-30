@@ -1,0 +1,63 @@
+	• Presentation: 20-25 Minuten  on Feb 2 or 4 =>  approx. 10 slides
+	• Every term paper should consist of the following parts:
+  	– Introduction of the general problem and a short overview about the
+		  relevant literature.
+	  – Description of the considered method(s).
+	  – Assessment of the method(s) by means of Monte-Carlo simulations.
+	  – Potentially an application to real data.
+	•  Page Count:
+	  – For groups of 3: 15-20 pages (plus bibliography and appendix)
+	  – Long tables, proofs, additional figures, etc. should be placed in the
+    	appendix.
+	  – Line-spacing: 1.5
+	
+	Fragen: Muss unser Paper ökonomisch sein?
+	Sollen wir den Fall "n ist klein"betrachten?=> Maximum Likelihood
+	Bayes weglassen?
+  
+  	
+
+	1. Introduction
+		a. Why do we use time series in high dimensional forecasting? 
+			i. -> time series are not only dependent on ist own lag but they also have interaction terms as they are correlated (granger causality) with other time series
+			ii. Pitfalls of usind standard forecasting when n is large
+		b. Why do we need Dynamic Factor Analysis ?
+			i.  As already mentioned we have high dimenions whch are hard to illustrate and  often might be highly corrlated. Thus our analysis with standard approaches suffer. Also the data can consists of latent variables, hence combining highly correlated variables to one factor seems reasonable. So we get a much smaller number of factors compared to our prior no. of variables and they are orthogonal thus independent of each other. 
+			Perfect for illustration and analysis!
+		c. Giving an empirical motivation 
+			i. Especially in macroeconomics , biology or medical data DFA is and attractive tool to gain more information based on that "big data"
+			ii. Medical example -> maybe what symptoms do people have ,when they experienced cancer? Is there time series possible?
+			iii. Macroeconomics: -> GDP, Money Supply, interest rates, unemployment rate etc..
+	2. Description of the method
+		a. Time series -> Vector Autoregression 
+			i. Prelimary: Why do we use this and not ARIMA? Or GARCH? Wtf is Garch?
+			ii. Prerequisites: weakly stationarity, ie.  All roots of the characteric eq. Of the lag polynomial are outside the unit circle |z|<= 1 => test with dickey fuller test???
+			iii. Autocovariance function and correlation coefficient rho
+			iv. (AR  representataion) generate forcasts
+			v. (MA representation) calculating the forecast error
+			vi. => error correction representation
+			vii. Information criteria to determine the number of lags:
+				1) Hannah Quinn criterion 
+				2) Schwarz criterion
+				3) AIC
+				4) =>  Is there still correlation between residuals?
+					a) Check with Ljung-Box or Box Pierce test!
+			viii. Granger causality (to find the interaction effects) 
+				1) Structural VAR
+				2) Wald test
+			ix. Impulse response function: an innovation shock has a short effect on the variables
+			x. Variance Decomposition
+		b. Factor Analysis
+		c. Combining both methods: DYNAMIC FACTOR ANALYSIS
+			i. Varimax Rotation
+			
+		
+	3. Assesment of the method with MC-simulation
+		a. What structure did we use and why? 
+			i. i.e correlation matrix , high p, autogressive function with how many lags, why this no. Of lags? Moving average?
+		b. The application in a simple case 
+		c. What kind of "Drehschrauben" exist ? Direct link to our justification of the structure. So what can we vary? What so we see?
+		d. Is everything consistens to the theory? Also if we consider the infinite case? 
+	4. Real data application
+
+	
