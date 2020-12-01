@@ -6,16 +6,22 @@ To ensure reproducibility, we have integrated Travis CI. The build's history can
 
 ##Installation
 
-Either install it directly from GitHub.
-or clone the repository (do changes) and run
-
+Either install it directly from GitHub (later for the professors and students) 
 ```javascript
-devtools::install(dependencies = TRUE)
-library(hidiTS)
-roxygen2::roxygenise()
+#install.packages("devtools") #only once
+devtools::install_github("manuhuth/hidiTS")
+```
+
+or clone the repository (do changes) and run
+```javascript
+#install.packages("devtools") #needed only once
+#install.packages("roxygen2") #needed only once
+devtools::install(dependencies = TRUE) #installs package
+library(hidiTS) #loads package
+roxygen2::roxygenise() #creates documentation files (.rd) in man folder
 
 pack <- "hidiTS"
 path <- find.package(pack)
-system(paste(shQuote(file.path(R.home("bin"), "R")),"CMD", "Rd2pdf", shQuote(path)))
+system(paste(shQuote(file.path(R.home("bin"), "R")),"CMD", "Rd2pdf", shQuote(path))) #creates Vignette
 ```
 
