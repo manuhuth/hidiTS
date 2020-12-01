@@ -9,6 +9,7 @@ To ensure reproducibility, we have integrated Travis CI. The build's history can
 Either install it directly from GitHub.
 or clone the repository (do changes) and run
 
+```javascript
 devtools::install(dependencies = TRUE)
 library(hidiTS)
 roxygen2::roxygenise()
@@ -16,5 +17,5 @@ roxygen2::roxygenise()
 pack <- "hidiTS"
 path <- find.package(pack)
 system(paste(shQuote(file.path(R.home("bin"), "R")),"CMD", "Rd2pdf", shQuote(path)))
-
+```
 
