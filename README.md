@@ -4,7 +4,7 @@ We evaluate methods and conduct simulation studies for high-dimensional time ser
 ## Continous integration with Travis CI to ensure Reproducibility
 To ensure reproducibility, we have integrated Travis CI. The build's history can be found here [![Build Status](https://travis-ci.org/HumanCapitalAnalysis/microeconometrics-course-project-manuhuth.svg?branch=master)](https://travis-ci.org/github/manuhuth/hidiTS)
 
-##Installation
+## Installation
 
 Either install it directly from GitHub (later for the professors and students) 
 ```javascript
@@ -25,3 +25,4 @@ path <- find.package(pack)
 system(paste(shQuote(file.path(R.home("bin"), "R")),"CMD", "Rd2pdf", shQuote(path))) #creates Vignette
 ```
 
+## References
