@@ -41,6 +41,8 @@ sim_F <- function(dim, lags, T, A = NULL, vcv_eta = diag(dim)) {
   if (is.null(A)) {
     A <- random_matrices(n = lags, row = dim, col = dim)
   }
+  
+  A[[1]] <- diag(dim)
 
   # simulate first and second Fs
   F <- list(eta[1, ])
