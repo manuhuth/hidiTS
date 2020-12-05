@@ -197,6 +197,7 @@ sim_data <- function(p, T, dim_F, lags_F, lags_X, ar_F, ar_Y, A = NULL, L = NULL
   epsilon <- Y_object$epsilon
 
   F <- do.call(cbind, F)
+  X <- do.call(cbind, X)
   Y_out <- Y[(length(Y)-T+1):length(Y)]
   X_out <- X[,(ncol(X)-T+1):ncol(X)]
   F_out <- F[,(ncol(F)-T+1):ncol(F)]
