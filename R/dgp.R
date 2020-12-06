@@ -5,19 +5,30 @@
 #' @param col Number of columns per matrix.
 #' @param low lower bound of the uniform distribution.
 #' @param up upper bound of the uniform distribution.
+#' @param geometric If TRUE, the matrices are sqaured values.
 #' @return List including the n matrices.
 #' @examples
 #' random_matrices(n = 4, row = 5, col = 6)
 #' @export
-random_matrices <- function(n, row, col, low = -0.5, up = 0.5, adjust_diag=TRUE) {
+random_matrices <- function(n, row, col, low = -0.5, up = 0.5, adjust_diag = TRUE, geometric = FALSE) {
   # to-do: add more flexible ways of matrices (more structures for coefficients)
   A <- list()
-  for (j in 1:n) {
+  if (isTRUE(geometric)) {
     M <- matrix(runif(row * col, low, up), row, col)
-    if ((isTRUE(adjust_diag)) & col ==row) {
-      diag(M) <- runif(row , 0.01, up)
+    for (j in 1:n) {
+      if ((isTRUE(adjust_diag)) & col == row) {
+        diag(M) <- runif(row, 0.01, up)
+      }
+      A[[j]] <- M^(n-j+1)
     }
-    A[[j]] <- M
+  } else {
+    for (j in 1:n) {
+      M <- matrix(runif(row * col, low, up), row, col)
+      if ((isTRUE(adjust_diag)) & col == row) {
+        diag(M) <- runif(row, 0.01, up)
+      }
+      A[[j]] <- M
+    }
   }
   return(A)
 }
@@ -31,7 +42,7 @@ random_matrices <- function(n, row, col, low = -0.5, up = 0.5, adjust_diag=TRUE)
 #' gamma <- random_matrices(n = 4, row = 5, col = 5)
 #' cov_stationarity(gamma)
 #' @export
-cov_stationarity <- function(gamma, epsilon=0.0002) {
+cov_stationarity <- function(gamma, epsilon = 0.0002) {
   Gamma <- do.call(cbind, gamma)
   k <- length(gamma)
   q <- ncol(gamma[[1]])
@@ -40,7 +51,7 @@ cov_stationarity <- function(gamma, epsilon=0.0002) {
   lower <- cbind(lower_diag, zero_right)
   M <- rbind(Gamma, lower)
   eigenvalues <- eigen(M)$values
-  output <- all(abs(eigenvalues) < 1-epsilon)
+  output <- all(abs(eigenvalues) < 1 - epsilon)
 
   return(output)
 }
@@ -60,7 +71,7 @@ cov_stationarity <- function(gamma, epsilon=0.0002) {
 #' sim_F(dim = 3, lags = 4, T = 30)
 #' @export
 sim_F <- function(dim, lags, T, A = NULL, low = -0.4, up = 0.4, vcv_eta = diag(dim),
-                  only_stationary = TRUE, epsilon=0.0002, max_it_station = 500, adjust_diag = TRUE) {
+                  only_stationary = TRUE, epsilon = 0.0002, max_it_station = 500, adjust_diag = TRUE, geometric = FALSE) {
   # dependent on MASS
   # to-do: change A creation -> see random_matrices
   #        allow for correlated errors within a time series?
@@ -70,12 +81,12 @@ sim_F <- function(dim, lags, T, A = NULL, low = -0.4, up = 0.4, vcv_eta = diag(d
 
   # simulate A
   if (is.null(A)) {
-    A <- random_matrices(n = lags, row = dim, col = dim, low = low, up = up, adjust_diag = adjust_diag)
+    A <- random_matrices(n = lags, row = dim, col = dim, low = low, up = up, adjust_diag = adjust_diag, geometric = geometric)
     stationar <- cov_stationarity(A, epsilon = epsilon)
     if (isTRUE(only_stationary)) {
       it <- 0
       while (isFALSE(stationar)) {
-        A <- random_matrices(n = lags, row = dim, col = dim, low = low, up = up, adjust_diag = adjust_diag)
+        A <- random_matrices(n = lags, row = dim, col = dim, low = low, up = up, adjust_diag = adjust_diag, geometric = geometric)
         stationar <- cov_stationarity(A, epsilon = epsilon)
         it <- it + 1
         if (it > max_it_station) {
@@ -117,16 +128,24 @@ sim_F <- function(dim, lags, T, A = NULL, low = -0.4, up = 0.4, vcv_eta = diag(d
 #' @param  start_ar Factor where to start from. ensures that Y_t+1 and X_t are simulated from same f_t
 #' @return Matrix containing the lagged factor values in the proper shape to multiply it with the loadings.
 #' @examples
-#' F <- sim_F(dim = 3, lags = 4, T = 30)
-#' stack_F(F = F, lags = 3)
+#' F <- sim_F(dim = 3, lags = 4, T = 30)$F
+#' stack_F(F = F, lags = 3, start_ar=4)
 #' @export
 stack_F <- function(F, lags, start_ar) {
   par <- lags + 1
   T <- length(F)
-  big_F <- do.call(cbind, F[(start_ar+1):T])
+  big_F <- do.call(cbind, F[(start_ar + 1):T])
   for (j in 1:(par - 1)) {
     big_F <- rbind(big_F, do.call(cbind, F[(start_ar + 1 - j):(T - j)]))
   }
+
+  help_trans <- c()
+  for (index in 1:nrow(big_F)){
+    help_trans <- rbind(help_trans, big_F[nrow(big_F) - index +1,])
+  }
+
+  big_F <- help_trans
+
   return(big_F)
 }
 
@@ -144,7 +163,7 @@ stack_F <- function(F, lags, start_ar) {
 #' sim_F(dim = 3, lags = 4, T = 30)
 #' sim_X(F = F, p = 3, lags = 2)
 #' @export
-sim_X <- function(F, p, lags, start_ar, L = NULL, low = -0.4, up = 0.4, vcv_mu = diag(p), adjust_diag = TRUE) {
+sim_X <- function(F, p, lags, start_ar, L = NULL, low = -0.4, up = 0.4, vcv_mu = diag(p), adjust_diag = TRUE, geometric = FALSE) {
   # to-do: change L creation -> see random_matrices
   #        allow for correlated errors within a time series?
 
@@ -152,12 +171,12 @@ sim_X <- function(F, p, lags, start_ar, L = NULL, low = -0.4, up = 0.4, vcv_mu =
   num_lambda <- lags + 1
   dim_F <- length(F[[1]])
   if (is.null(L)) {
-    L <- random_matrices(n = num_lambda, row = p, col = dim_F, low = low, up = up, adjust_diag = adjust_diag)
+    L <- random_matrices(n = num_lambda, row = p, col = dim_F, low = low, up = up, adjust_diag = adjust_diag, geometric = geometric)
   }
 
-  mu <- t(mvrnorm(n = length(F) - lags, mu = rep(0, p), Sigma = vcv_mu))
+  mu <- t(mvrnorm(n = length(F) - start_ar, mu = rep(0, p), Sigma = vcv_mu))
 
-  big_F <- stack_F(F, lags = lags, start_ar= start_ar) # stack F such that X can be computed with one matrix multiplication
+  big_F <- stack_F(F, lags = lags, start_ar = start_ar) # stack F such that X can be computed with one matrix multiplication
   L_stack <- do.call(cbind, L)
 
   X <- L_stack %*% big_F + mu
@@ -179,18 +198,18 @@ sim_X <- function(F, p, lags, start_ar, L = NULL, low = -0.4, up = 0.4, vcv_mu =
 #' F <- sim_F(dim = 3, lags = 4, T = 30)
 #' sim_Y(F = F, ar_F = 3, ar_Y = 2)
 #' @export
-sim_Y <- function(F, ar_F, ar_Y, start_F_ar ,beta = NULL, gamma = NULL, low = -0.4, up = 0.4,
-                  vcv_epsilon = diag(length(F)), adjust_diag = TRUE) {
+sim_Y <- function(F, ar_F, ar_Y, start_F_ar, beta = NULL, gamma = NULL, low = -0.4, up = 0.4,
+                  vcv_epsilon = diag(length(F)), adjust_diag = TRUE, geometric = FALSE) {
   # to-do: change beta/gamma creation -> see random_matrices
 
   dim_F <- length(F[[1]])
   T <- length(F)
   if (is.null(beta)) {
-    beta <- random_matrices(n = ar_F, row = 1, col = dim_F, low = low, up = up, adjust_diag = adjust_diag)
+    beta <- random_matrices(n = ar_F, row = 1, col = dim_F, low = low, up = up, adjust_diag = adjust_diag,geometric = geometric)
   }
 
   if (is.null(gamma)) {
-    gamma <- random_matrices(n = 1, row = 1, col = ar_Y, low = low, up = up, adjust_diag = adjust_diag)
+    gamma <- random_matrices(n = 1, row = 1, col = ar_Y, low = low, up = up, adjust_diag = adjust_diag,geometric = geometric)
   }
 
   lags <- max(ar_F, ar_Y)
@@ -200,7 +219,7 @@ sim_Y <- function(F, ar_F, ar_Y, start_F_ar ,beta = NULL, gamma = NULL, low = -0
   Y <- c(0) # necessary to initialize with 0. Is overwritten in first loop
   for (t in 1:ar_Y) {
     Y[t] <- do.call(cbind, beta) %*% c(do.call(cbind, F[(t + start_F_ar - ar_F):(t + start_F_ar - 1)])) +
-              gamma[[1]][, 1:length(Y)] %*% Y + rnorm(n = 1, 0, 1)
+      gamma[[1]][, 1:length(Y)] %*% Y + rnorm(n = 1, 0, 1)
   }
 
   for (t in (lags + 1):T) {
@@ -241,22 +260,28 @@ sim_data <- function(p, T, dim_F, lags_F, lags_X, ar_F, ar_Y, A = NULL, low_X = 
                      L = NULL, low_F = -0.5, up_F = 0.5,
                      beta = NULL, gamma = NULL, low_Y = -0.5, up_Y = 0.5, vcv_eta = diag(dim_F), vcv_mu = diag(p),
                      vcv_epsilon = diag(length(F)), burn_in = 20, data_only = TRUE,
-                     only_stationary = TRUE, epsilon=0.0002, max_it_station = 500, adjust_diag = TRUE) {
-  max_ar <- lags_F + lags_X + ar_F + ar_Y
-  start_XY_ar <- max(lags_X, ar_F)
+                     only_stationary = TRUE, epsilon = 0.0002, max_it_station = 500, adjust_diag = TRUE,
+                     geometric_F =FALSE, geometric_X =FALSE, geometric_Y =FALSE) {
+
+  max_ar <- lags_F + lags_X + max(ar_F + ar_Y) + 1
+  start_XY_ar <- max(lags_X, ar_F) + 1
   sim_length <- T + max_ar + burn_in
 
-  F_object <- sim_F(dim = dim_F, T = sim_length, lags = lags_F, A = A, vcv_eta = vcv_eta, low = low_F, up = up_F,
-                    only_stationary = only_stationary, epsilon=epsilon, max_it_station = max_it_station, adjust_diag = adjust_diag)
+  F_object <- sim_F(
+    dim = dim_F, T = sim_length, lags = lags_F, A = A, vcv_eta = vcv_eta, low = low_F, up = up_F,
+    only_stationary = only_stationary, epsilon = epsilon, max_it_station = max_it_station,
+    adjust_diag = adjust_diag, geometric = geometric_F
+  )
   F <- F_object$F
   eta <- F_object$eta
-  X_object <- sim_X(F = F, p = p, lags = lags_X, start_ar=start_XY_ar, L = L, vcv_mu = vcv_mu, low = low_X, up = up_X, adjust_diag = adjust_diag)
+  X_object <- sim_X(F = F, p = p, lags = lags_X, start_ar = start_XY_ar, L = L, vcv_mu = vcv_mu,
+                    low = low_X, up = up_X, adjust_diag = adjust_diag, geometric = geometric_X)
   X <- X_object$X
   mu <- X_object$mu
 
   Y_object <- sim_Y(
-    F = F, ar_F = ar_F, ar_Y = ar_Y, start_F_ar=start_XY_ar, beta = beta, gamma = gamma, vcv_epsilon = vcv_epsilon,
-    low = low_Y, up = up_Y, adjust_diag = adjust_diag
+    F = F, ar_F = ar_F, ar_Y = ar_Y, start_F_ar = start_XY_ar, beta = beta, gamma = gamma, vcv_epsilon = vcv_epsilon,
+    low = low_Y, up = up_Y, adjust_diag = adjust_diag, geometric = geometric_Y
   )
   Y <- Y_object$Y
   epsilon <- Y_object$epsilon
