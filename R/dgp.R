@@ -110,17 +110,18 @@ sim_F <- function(dim, lags, T, A = NULL, low = -0.4, up = 0.4, vcv_eta = diag(d
 #'
 #' @param F List of Factors.
 #' @param lags Number of lags to be included to compute the observable variables.
+#' @param  start_ar Factor where to start from. ensures that Y_t+1 and X_t are simulated from same f_t
 #' @return Matrix containing the lagged factor values in the proper shape to multiply it with the loadings.
 #' @examples
 #' F <- sim_F(dim = 3, lags = 4, T = 30)
 #' stack_F(F = F, lags = 3)
 #' @export
-stack_F <- function(F, lags) {
+stack_F <- function(F, lags, start_ar) {
   par <- lags + 1
   T <- length(F)
-  big_F <- do.call(cbind, F[par:T])
+  big_F <- do.call(cbind, F[(start_ar+1):T])
   for (j in 1:(par - 1)) {
-    big_F <- rbind(big_F, do.call(cbind, F[(par - j):(T - j)]))
+    big_F <- rbind(big_F, do.call(cbind, F[(start_ar + 1 - j):(T - j)]))
   }
   return(big_F)
 }
@@ -131,6 +132,7 @@ stack_F <- function(F, lags) {
 #' @param F List of factors.
 #' @param p Number of observable variables per period.
 #' @param lags Number of lags to be included for \eqn{F_t}.
+#' @param  start_ar Factor where to start from. ensures that Y_t+1 and X_t are simulated from same f_t.
 #' @param L List containing the \eqn{L_j} matrices (loadings). If NULL, \eqn{L_j} matrices are simulated.
 #' @param vcv_mu Variance-covariance matrix of the errors.
 #' @return List of time series \eqn{X_t} for \eqn{t=1, \dots, T}, loadings and errors.
@@ -138,7 +140,7 @@ stack_F <- function(F, lags) {
 #' sim_F(dim = 3, lags = 4, T = 30)
 #' sim_X(F = F, p = 3, lags = 2)
 #' @export
-sim_X <- function(F, p, lags, L = NULL, low = -0.4, up = 0.4, vcv_mu = diag(p)) {
+sim_X <- function(F, p, lags, start_ar, L = NULL, low = -0.4, up = 0.4, vcv_mu = diag(p)) {
   # to-do: change L creation -> see random_matrices
   #        allow for correlated errors within a time series?
 
@@ -151,7 +153,7 @@ sim_X <- function(F, p, lags, L = NULL, low = -0.4, up = 0.4, vcv_mu = diag(p)) 
 
   mu <- t(mvrnorm(n = length(F) - lags, mu = rep(0, p), Sigma = vcv_mu))
 
-  big_F <- stack_F(F, lags = lags) # stack F such that X can be computed with one matrix multiplication
+  big_F <- stack_F(F, lags = lags, start_ar= start_ar) # stack F such that X can be computed with one matrix multiplication
   L_stack <- do.call(cbind, L)
 
   X <- L_stack %*% big_F + mu
@@ -164,6 +166,7 @@ sim_X <- function(F, p, lags, L = NULL, low = -0.4, up = 0.4, vcv_mu = diag(p)) 
 #' @param F List of factors.
 #' @param ar_F Number of lagged factors used to compute Y.
 #' @param ar_Y Number of lagged Y used to compute Y.
+#' @param start_F_ar Indicates where to start from the factors (such that x_t and y_t use the same f_t)
 #' @param beta Parameter for the Factors. If NULL, \eqn{\beta_j} matrices are simulated.
 #' @param gamma Parameter for the lagged Y's. If NULL, \eqn{\gamma_j} vector is simulated.
 #' @param vcv_epsilon Variance-covariance matrix of the errors.
@@ -172,7 +175,7 @@ sim_X <- function(F, p, lags, L = NULL, low = -0.4, up = 0.4, vcv_mu = diag(p)) 
 #' F <- sim_F(dim = 3, lags = 4, T = 30)
 #' sim_Y(F = F, ar_F = 3, ar_Y = 2)
 #' @export
-sim_Y <- function(F, ar_F, ar_Y, beta = NULL, gamma = NULL, low = -0.4, up = 0.4, vcv_epsilon = diag(length(F))) {
+sim_Y <- function(F, ar_F, ar_Y, start_F_ar ,beta = NULL, gamma = NULL, low = -0.4, up = 0.4, vcv_epsilon = diag(length(F))) {
   # to-do: change beta/gamma creation -> see random_matrices
 
   dim_F <- length(F[[1]])
@@ -191,7 +194,8 @@ sim_Y <- function(F, ar_F, ar_Y, beta = NULL, gamma = NULL, low = -0.4, up = 0.4
 
   Y <- c(0) # necessary to initialize with 0. Is overwritten in first loop
   for (t in 1:ar_Y) {
-    Y[t] <- do.call(cbind, beta) %*% c(do.call(cbind, F[(t):(t + ar_F - 1)])) + gamma[[1]][, 1:length(Y)] %*% Y + rnorm(n = 1, 0, 1)
+    Y[t] <- do.call(cbind, beta) %*% c(do.call(cbind, F[(t + start_F_ar - ar_F):(t + start_F_ar - 1)])) +
+              gamma[[1]][, 1:length(Y)] %*% Y + rnorm(n = 1, 0, 1)
   }
 
   for (t in (lags + 1):T) {
@@ -234,18 +238,19 @@ sim_data <- function(p, T, dim_F, lags_F, lags_X, ar_F, ar_Y, A = NULL, low_X = 
                      vcv_epsilon = diag(length(F)), burn_in = 20, data_only = TRUE,
                      only_stationary = TRUE, epsilon=0.0002, max_it_station = 500) {
   max_ar <- lags_F + lags_X + ar_F + ar_Y
+  start_XY_ar <- max(lags_X, ar_F)
   sim_length <- T + max_ar + burn_in
 
   F_object <- sim_F(dim = dim_F, T = sim_length, lags = lags_F, A = A, vcv_eta = vcv_eta, low = low_F, up = up_F,
                     only_stationary = only_stationary, epsilon=epsilon, max_it_station = max_it_station)
   F <- F_object$F
   eta <- F_object$eta
-  X_object <- sim_X(F = F, p = p, lags = lags_X, L = L, vcv_mu = vcv_mu, low = low_X, up = up_X)
+  X_object <- sim_X(F = F, p = p, lags = lags_X, start_ar=start_XY_ar, L = L, vcv_mu = vcv_mu, low = low_X, up = up_X)
   X <- X_object$X
   mu <- X_object$mu
 
   Y_object <- sim_Y(
-    F = F, ar_F = ar_F, ar_Y = ar_Y, beta = beta, gamma = gamma, vcv_epsilon = vcv_epsilon,
+    F = F, ar_F = ar_F, ar_Y = ar_Y, start_F_ar=start_XY_ar, beta = beta, gamma = gamma, vcv_epsilon = vcv_epsilon,
     low = low_Y, up = up_Y
   )
   Y <- Y_object$Y
