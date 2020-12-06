@@ -27,7 +27,7 @@ random_matrices <- function(n, row, col, low = -0.5, up = 0.5) {
 #' gamma <- random_matrices(n = 4, row = 5, col = 5)
 #' cov_stationarity(gamma)
 #' @export
-cov_stationarity <- function(gamma) {
+cov_stationarity <- function(gamma, epsilon=0.0002) {
   Gamma <- do.call(cbind, gamma)
   k <- length(gamma)
   q <- ncol(gamma[[1]])
@@ -36,7 +36,7 @@ cov_stationarity <- function(gamma) {
   lower <- cbind(lower_diag, zero_right)
   M <- rbind(Gamma, lower)
   eigenvalues <- eigen(M)$values
-  output <- all(abs(eigenvalues) < 1)
+  output <- all(abs(eigenvalues) < 1-epsilon)
 
   return(output)
 }
@@ -48,11 +48,15 @@ cov_stationarity <- function(gamma) {
 #' @param T Length of the time series.
 #' @param A List containing the \eqn{A_j} matrices. If NULL, \eqn{A_j} matrices are simulated.
 #' @param vcv_eta Variance-covariance matrix of the errors.
+#' @param only_stationary boolean indicating if only stationary TS should be returned.
+#' @param epsilon Tolerance parameter that evaluates if roots of polynomial are inside unit circle. (1-epsilon)
+#' @param max_it_station Integer specifying the maximal number of iterations to find a stationary process.
 #' @return List of time series \eqn{F_t} for \eqn{t=1, \dots, T}.
 #' @examples
 #' sim_F(dim = 3, lags = 4, T = 30)
 #' @export
-sim_F <- function(dim, lags, T, A = NULL, low = -0.4, up = 0.4, vcv_eta = diag(dim), only_stationary = TRUE, max_it_station = 100) {
+sim_F <- function(dim, lags, T, A = NULL, low = -0.4, up = 0.4, vcv_eta = diag(dim),
+                  only_stationary = TRUE, epsilon=0.0002, max_it_station = 500) {
   # dependent on MASS
   # to-do: change A creation -> see random_matrices
   #        allow for correlated errors within a time series?
@@ -63,12 +67,12 @@ sim_F <- function(dim, lags, T, A = NULL, low = -0.4, up = 0.4, vcv_eta = diag(d
   # simulate A
   if (is.null(A)) {
     A <- random_matrices(n = lags, row = dim, col = dim, low = low, up = up)
-    stationar <- cov_stationarity(A)
+    stationar <- cov_stationarity(A, epsilon = epsilon)
     if (isTRUE(only_stationary)) {
       it <- 0
       while (isFALSE(stationar)) {
         A <- random_matrices(n = lags, row = dim, col = dim, low = low, up = up)
-        stationar <- cov_stationarity(A)
+        stationar <- cov_stationarity(A, epsilon = epsilon)
         it <- it + 1
         if (it > max_it_station) {
           stop("No stationary process was found to build the factors.")
@@ -216,6 +220,9 @@ sim_Y <- function(F, ar_F, ar_Y, beta = NULL, gamma = NULL, low = -0.4, up = 0.4
 #' @param vcv_epsilon Variance-covariance matrix of the errors to create variable to forecast Y.
 #' @param burn_in Length of burn-in period that is simulated in addition to receive a time-series more stable on the data.
 #' @param data_only If TRUE, only the values for factors, observable variables and the variable which is to be predicted are returned.
+#' @param only_stationary boolean indicating if only stationary TS should be returned.
+#' @param epsilon Tolerance parameter that evaluates if roots of polynomial are inside unit circle. (1-epsilon)
+#' @param max_it_station Integer specifying the maximal number of iterations to find a stationary process.
 #' @return List of factors, observable variables and the variable which is to be predicted (errors, loadings, parameter matrices)
 #' @examples
 #' F <- sim_F(dim = 3, lags = 4, T = 30)
@@ -224,11 +231,13 @@ sim_Y <- function(F, ar_F, ar_Y, beta = NULL, gamma = NULL, low = -0.4, up = 0.4
 sim_data <- function(p, T, dim_F, lags_F, lags_X, ar_F, ar_Y, A = NULL, low_X = -0.5, up_X = 0.5,
                      L = NULL, low_F = -0.5, up_F = 0.5,
                      beta = NULL, gamma = NULL, low_Y = -0.5, up_Y = 0.5, vcv_eta = diag(dim_F), vcv_mu = diag(p),
-                     vcv_epsilon = diag(length(F)), burn_in = 20, data_only = TRUE) {
+                     vcv_epsilon = diag(length(F)), burn_in = 20, data_only = TRUE,
+                     only_stationary = TRUE, epsilon=0.0002, max_it_station = 500) {
   max_ar <- lags_F + lags_X + ar_F + ar_Y
   sim_length <- T + max_ar + burn_in
 
-  F_object <- sim_F(dim = dim_F, T = sim_length, lags = lags_F, A = A, vcv_eta = vcv_eta, low = low_F, up = up_F)
+  F_object <- sim_F(dim = dim_F, T = sim_length, lags = lags_F, A = A, vcv_eta = vcv_eta, low = low_F, up = up_F,
+                    only_stationary = only_stationary, epsilon=epsilon, max_it_station = max_it_station)
   F <- F_object$F
   eta <- F_object$eta
   X_object <- sim_X(F = F, p = p, lags = lags_X, L = L, vcv_mu = vcv_mu, low = low_X, up = up_X)
