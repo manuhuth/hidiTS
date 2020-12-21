@@ -298,7 +298,7 @@ sim_data <- function(p, T, dim_F, lags_F, lags_X, ar_F, ar_Y, A = NULL, low_X = 
     output <- list("Y" = Y_out, "X" = X_out, "F" = F_out)
   } else {
     output <- list(
-      "Y" = Y_out, "X" = X_ot, "F" = F_out, "beta" = Y_object$beta, "gamma" = Y_object$gamma,
+      "Y" = Y_out, "X" = X_out, "F" = F_out, "beta" = Y_object$beta, "gamma" = Y_object$gamma,
       "A" = F_object$A, "L" = X_object$L, "eta" = eta_out, "mu" = mu_out,
       "epsilon" = epsilon_out
     )
