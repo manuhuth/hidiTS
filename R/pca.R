@@ -11,6 +11,7 @@ pca_estimator <- function(X, number) {
 
 convert_pca_estimator <- function(pca_est){
   F <- pca_est$F
+  q <- nrow(F)
   Lambda <- pca_est$Lambda
   V <- var(t(F))
   theta <- eigen(V)$vectors
