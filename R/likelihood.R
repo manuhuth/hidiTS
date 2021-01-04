@@ -1,7 +1,5 @@
 #rm(list = ls())
 ################################functions################################
-library(hidiTS)
-library(matrixcalc)
 
 
 ################################theta_wrapper
