@@ -288,17 +288,7 @@ sim_data <- function(p = 20, T = 30, dim_F= 3, lags_F=1, lags_X=2, ar_F=2, ar_Y=
     only_stationary = only_stationary, epsilon = epsilon, max_it_station = max_it_station,
     adjust_diag = adjust_diag, geometric = geometric_F, gamma_diag = diag_F
   )
-  F_simulated <- F_object$F
-  Fm <- matrix(do.call(cbind, F_simulated)[, (ncol(do.call(cbind, F_simulated)) - T + 1):ncol(do.call(cbind, F_simulated))], dim_F, T)
-
-  V <- var(t(Fm))
-
-  theta <- eigen(V)$vectors
-
-  D <- diag(1/eigen(V)$values^0.5, dim_F)
-
-  F <- lapply(F_simulated, function(x){D %*% t(theta) %*% x})
-
+  F <- F_object$F
 
   eta <- F_object$eta
   X_object <- sim_X(F = F, p = p, lags = lags_X, start_ar = start_XY_ar, L = L, vcv_mu = vcv_mu,
