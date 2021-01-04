@@ -10,24 +10,38 @@
 #' @examples
 #' random_matrices(n = 4, row = 5, col = 6)
 #' @export
-random_matrices <- function(n, row, col, low = -0.5, up = 0.5, adjust_diag = TRUE, geometric = FALSE) {
+random_matrices <- function(n, row, col, low = -0.5, up = 0.5, adjust_diag = TRUE, geometric = FALSE, diagonal = FALSE) {
   # to-do: add more flexible ways of matrices (more structures for coefficients)
   A <- list()
-  if (isTRUE(geometric)) {
-    M <- matrix(runif(row * col, low, up), row, col)
-    for (j in 1:n) {
-      if ((isTRUE(adjust_diag)) & col == row) {
-        diag(M) <- runif(row, 0.01, up)
+  if (isTRUE(diagonal)) {
+      M <- diag(x=runif(row, low, up), ncol=row)
+      if (isTRUE(geometric)) {
+        for (j in 1:n) {
+          A[[j]] <- M^j
+        }
+      } else{
+        for (j in 1:n) {
+          A[[j]] <- diag(runif(row, low, up))
+        }
       }
-      A[[j]] <- M^(n-j+1)
-    }
-  } else {
-    for (j in 1:n) {
+  }else{
+
+    if (isTRUE(geometric)) {
       M <- matrix(runif(row * col, low, up), row, col)
-      if ((isTRUE(adjust_diag)) & col == row) {
-        diag(M) <- runif(row, 0.01, up)
+      for (j in 1:n) {
+        if ((isTRUE(adjust_diag)) & col == row) {
+          diag(M) <- runif(row, 0.01, up)
+        }
+        A[[j]] <- M^(n-j+1)
       }
-      A[[j]] <- M
+    } else {
+      for (j in 1:n) {
+        M <- matrix(runif(row * col, low, up), row, col)
+        if ((isTRUE(adjust_diag)) & col == row) {
+          diag(M) <- runif(row, 0.01, up)
+        }
+        A[[j]] <- M
+      }
     }
   }
   return(A)
@@ -71,7 +85,8 @@ cov_stationarity <- function(gamma, epsilon = 0.0002) {
 #' sim_F(dim = 3, lags = 4, T = 30)
 #' @export
 sim_F <- function(dim, lags, T, A = NULL, low = -0.4, up = 0.4, vcv_eta = diag(dim),
-                  only_stationary = TRUE, epsilon = 0.0002, max_it_station = 500, adjust_diag = TRUE, geometric = FALSE) {
+                  only_stationary = TRUE, epsilon = 0.0002, max_it_station = 500, adjust_diag = TRUE,
+                  geometric = TRUE, gamma_diag = TRUE) {
   # dependent on MASS
   # to-do: change A creation -> see random_matrices
   #        allow for correlated errors within a time series?
@@ -81,7 +96,7 @@ sim_F <- function(dim, lags, T, A = NULL, low = -0.4, up = 0.4, vcv_eta = diag(d
 
   # simulate A
   if (is.null(A)) {
-    A <- random_matrices(n = lags, row = dim, col = dim, low = low, up = up, adjust_diag = adjust_diag, geometric = geometric)
+    A <- random_matrices(n = lags, row = dim, col = dim, low = low, up = up, adjust_diag = adjust_diag, geometric = geometric, diagonal = gamma_diag)
     stationar <- cov_stationarity(A, epsilon = epsilon)
     if (isTRUE(only_stationary)) {
       it <- 0
@@ -110,7 +125,7 @@ sim_F <- function(dim, lags, T, A = NULL, low = -0.4, up = 0.4, vcv_eta = diag(d
   # simulate until burn in is over
   A_stack <- do.call(cbind, A)
   for (t in 1:T) {
-    F[[t + lags]] <- A_stack %*% c(do.call(cbind, F[t:(t + lags)])) + eta[t, ]
+    F[[t + lags]] <- A_stack %*% c(do.call(cbind, F[t:(t + lags-1)])) + eta[t, ]
   }
 
   F_ts <- F[(lags + 1):(T + lags)]
@@ -205,7 +220,7 @@ sim_Y <- function(F, ar_F, ar_Y, start_F_ar, beta = NULL, gamma = NULL, low = -0
   dim_F <- length(F[[1]])
   T <- length(F)
   if (is.null(beta)) {
-    beta <- random_matrices(n = ar_F, row = 1, col = dim_F, low = low, up = up, adjust_diag = adjust_diag,geometric = geometric)
+    beta <- random_matrices(n = ar_F, row = 1, col = dim_F, low = low, up = up, adjust_diag = adjust_diag, geometric = geometric)
   }
 
   if (is.null(gamma)) {
@@ -217,10 +232,11 @@ sim_Y <- function(F, ar_F, ar_Y, start_F_ar, beta = NULL, gamma = NULL, low = -0
   epsilon <- mvrnorm(n = 1, mu = rep(0, T), Sigma = vcv_epsilon)
 
   Y <- c(0) # necessary to initialize with 0. Is overwritten in first loop
-  for (t in 1:ar_Y) {
+  for (t in 1:lags) {
     Y[t] <- do.call(cbind, beta) %*% c(do.call(cbind, F[(t + start_F_ar - ar_F):(t + start_F_ar - 1)])) +
       gamma[[1]][, 1:length(Y)] %*% Y + rnorm(n = 1, 0, 1)
   }
+
 
   for (t in (lags + 1):T) {
     Y[t] <- do.call(cbind, beta) %*% c(do.call(cbind, F[(t - ar_F):(t - 1)])) +
@@ -256,12 +272,12 @@ sim_Y <- function(F, ar_F, ar_Y, start_F_ar, beta = NULL, gamma = NULL, low = -0
 #' F <- sim_F(dim = 3, lags = 4, T = 30)
 #' sim_Y(F = F, ar_F = 3, ar_Y = 2)
 #' @export
-sim_data <- function(p, T, dim_F, lags_F, lags_X, ar_F, ar_Y, A = NULL, low_X = -0.5, up_X = 0.5,
-                     L = NULL, low_F = -0.5, up_F = 0.5,
-                     beta = NULL, gamma = NULL, low_Y = -0.5, up_Y = 0.5, vcv_eta = diag(dim_F), vcv_mu = diag(p),
+sim_data <- function(p = 20, T = 30, dim_F= 3, lags_F=1, lags_X=2, ar_F=2, ar_Y=1, A = NULL, low_X = -3^0.5, up_X = 3^0.5,
+                     L = NULL, low_F = 0.2, up_F = 0.9,
+                     beta = NULL, gamma = NULL, low_Y = -0.9, up_Y = 0.9, vcv_eta = diag(dim_F), vcv_mu = diag(p),
                      vcv_epsilon = diag(length(F)), burn_in = 20, data_only = TRUE,
-                     only_stationary = TRUE, epsilon = 0.0002, max_it_station = 500, adjust_diag = TRUE,
-                     geometric_F =FALSE, geometric_X =FALSE, geometric_Y =FALSE) {
+                     only_stationary = TRUE, epsilon = 0.0002, max_it_station = 500, adjust_diag = FALSE,
+                     geometric_F =TRUE, diag_F = TRUE, geometric_X =FALSE, geometric_Y =FALSE) {
 
   max_ar <- lags_F + lags_X + max(ar_F + ar_Y) + 1
   start_XY_ar <- max(lags_X, ar_F) + 1
@@ -270,9 +286,20 @@ sim_data <- function(p, T, dim_F, lags_F, lags_X, ar_F, ar_Y, A = NULL, low_X = 
   F_object <- sim_F(
     dim = dim_F, T = sim_length, lags = lags_F, A = A, vcv_eta = vcv_eta, low = low_F, up = up_F,
     only_stationary = only_stationary, epsilon = epsilon, max_it_station = max_it_station,
-    adjust_diag = adjust_diag, geometric = geometric_F
+    adjust_diag = adjust_diag, geometric = geometric_F, gamma_diag = diag_F
   )
-  F <- F_object$F
+  F_simulated <- F_object$F
+  Fm <- matrix(do.call(cbind, F_simulated)[, (ncol(do.call(cbind, F_simulated)) - T + 1):ncol(do.call(cbind, F_simulated))], dim_F, T)
+
+  V <- var(t(Fm))
+
+  theta <- eigen(V)$vectors
+
+  D <- diag(1/eigen(V)$values^0.5, dim_F)
+
+  F <- lapply(F_simulated, function(x){D %*% t(theta) %*% x})
+
+
   eta <- F_object$eta
   X_object <- sim_X(F = F, p = p, lags = lags_X, start_ar = start_XY_ar, L = L, vcv_mu = vcv_mu,
                     low = low_X, up = up_X, adjust_diag = adjust_diag, geometric = geometric_X)
