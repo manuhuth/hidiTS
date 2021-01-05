@@ -32,7 +32,7 @@ convert_pca_estimator <- function(pca_est, q){
     F_out <- cbind(new_F_hat[1:q, 1:(T-lags-1)], matrix(new_F_hat[1:qp1,T-lags], q, lags+1) )
   }
 
-  output <- list('F' = new_F_hat, 'Lambda' = Lambda_hat_new)
+  output <- list('F' = F_out, 'Lambda' = Lambda_hat_new)
 
   return(output)
 }
