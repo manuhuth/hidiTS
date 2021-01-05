@@ -15,10 +15,10 @@ convert_pca_estimator <- function(pca_est, q){
   lags <- qp1/q-1
   Lambda <- pca_est$Lambda
 
-  V <- var(t(F_stack))
+  V <- var(t(F))
   theta <- eigen(V)$vectors
   D <- diag(1/eigen(V)$values^0.5, qp1)
-  F_unc <- D %*% t(theta) %*% F_stack
+  F_unc <- D %*% t(theta) %*% F
   Lambda_unc <- Lambda %*% solve(D %*% theta)
   QR_2 <- qr(t(Lambda_unc[1:qp1, 1:qp1]))
   L_qr_2 <- qr.Q(QR_2)
