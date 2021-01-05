@@ -9,20 +9,28 @@ pca_estimator <- function(X, number) {
 
 
 
-convert_pca_estimator <- function(pca_est){
+convert_pca_estimator <- function(pca_est, q){
   F <- pca_est$F
-  q <- nrow(F)
+  qp1 <- nrow(F)
+  lags <- qp1/q-1
   Lambda <- pca_est$Lambda
-  V <- var(t(F))
+
+  V <- var(t(F_stack))
   theta <- eigen(V)$vectors
-  D <- diag(1/eigen(V)$values^0.5, q)
-  F_unc <- D %*% t(theta) %*% F
+  D <- diag(1/eigen(V)$values^0.5, qp1)
+  F_unc <- D %*% t(theta) %*% F_stack
   Lambda_unc <- Lambda %*% solve(D %*% theta)
-  QR_2 <- qr(t(Lambda_unc[1:q, 1:q]))
+  QR_2 <- qr(t(Lambda_unc[1:qp1, 1:qp1]))
   L_qr_2 <- qr.Q(QR_2)
 
   new_F_hat <- L_qr_2%*%F_unc
-  Lambda_hat_new <- Lambda_unc %*% t(L_qr_2)
+  Lambda_hat_new <- Lambda_unc %*% L_qr_2
+
+  if (lags == 0) {
+    F_out <- new_F_hat
+  } else{
+    F_out <- cbind(new_F_hat[1:q, 1:(T-lags-1)], matrix(new_F_hat[1:qp1,T-lags], q, lags+1) )
+  }
 
   output <- list('F' = new_F_hat, 'Lambda' = Lambda_hat_new)
 

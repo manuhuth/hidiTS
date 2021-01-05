@@ -150,16 +150,18 @@ stack_F <- function(F, lags, start_ar) {
   par <- lags + 1
   T <- length(F)
   big_F <- do.call(cbind, F[(start_ar + 1):T])
-  for (j in 1:(par - 1)) {
-    big_F <- rbind(big_F, do.call(cbind, F[(start_ar + 1 - j):(T - j)]))
-  }
+  if (lags != 0) {
+    for (j in 1:(par - 1)) {
+      big_F <- rbind(big_F, do.call(cbind, F[(start_ar + 1 - j):(T - j)]))
+    }
 
-  help_trans <- c()
-  for (index in 1:nrow(big_F)){
-    help_trans <- rbind(help_trans, big_F[nrow(big_F) - index +1,])
-  }
+    help_trans <- c()
+    for (index in 1:nrow(big_F)){
+      help_trans <- rbind(help_trans, big_F[nrow(big_F) - index +1,])
+    }
 
-  big_F <- help_trans
+    big_F <- help_trans
+  }
 
   return(big_F)
 }
