@@ -8,13 +8,13 @@
 theta_wrapper <- function(theta,n,p,q){
   
   
-  last_gamma <- p*q*p*q
-  gamma <- matrix(data=theta[1:last_gamma],nrow=p*q,ncol = p*q)
+  last_gamma <- (p+1)*q*(p+1)*q
+  gamma <- matrix(data=theta[1:last_gamma],nrow=(p+1)*q,ncol = (p+1)*q)
   
   
   
-  last_lambda <- last_gamma + (n*p*q)
-  lambda <- matrix(data=theta[((last_gamma)+1):(last_lambda)],nrow=n,ncol = p*q)
+  last_lambda <- last_gamma + (n*(p+1)*q)
+  lambda <- matrix(data=theta[((last_gamma)+1):(last_lambda)],nrow=n,ncol = (p+1)*q)
   
   
   #sigma_u
@@ -22,8 +22,8 @@ theta_wrapper <- function(theta,n,p,q){
   sigma_u <- matrix(data=theta[((last_lambda)+1):(last_sigma_u) ],nrow=n,ncol = n)
   
   #sigma_e
-  last_sigma_e <- last_sigma_u + (p*q*p*q)
-  sigma_e <- matrix(data=theta[((last_sigma_u)+1):(last_sigma_e) ],nrow=p*q,ncol = p*q)
+  last_sigma_e <- last_sigma_u + ((p+1)*q*(p+1)*q)
+  sigma_e <- matrix(data=theta[((last_sigma_u)+1):(last_sigma_e) ],nrow=(p+1)*q,ncol = (p+1)*q)
   
   output <- list("gamma" = gamma, "lambda" = lambda, "sigma_u" = sigma_u, "sigma_e" = sigma_e)
   
@@ -36,7 +36,7 @@ theta_wrapper <- function(theta,n,p,q){
 
 
 theta_rows <- function(n,p,q){
-  rows=2*(p*q)^2+n*p*q+n^2
+  rows=2*((p+1)*q)^2+n*(p+1)*q+n^2
   
   return(rows)
   
@@ -48,15 +48,15 @@ theta_rows <- function(n,p,q){
 
 sigma_f_init  <- function(p,q,gamma,sigma_e){
   
-  temp <- solve(diag((p*q)^2) -kronecker(gamma, gamma, FUN = "*")) %*% vec(sigma_e)
-  sigma_f <- matrix(temp, ncol = p*q, nrow=p*q)
+  temp <- solve(diag(((p+1)*q)^2) -kronecker(gamma, gamma, FUN = "*")) %*% vec(sigma_e)
+  sigma_f <- matrix(temp, ncol = (p+1)*q, nrow=(p+1)*q)
   
   return(sigma_f)    
 }
 
 f_init <- function(p,q){
   
-  f_matrix <- matrix(data = 0, nrow = q*p, ncol = 1)
+  f_matrix <- matrix(data = 0, nrow = (p+1)*q, ncol = 1)
   
   return (f_matrix)
 }
@@ -225,7 +225,7 @@ wrapper <- function(theta,data,n,p,q,t){
 #rows=theta_rows(n=n,p=p,q=q)
 
 ################################data       
-#data <-sim_data(p=n,T=t,dim_F=3,lags_F=2,lags_X=1,ar_F = 2, ar_Y = 3)
+#data <-sim_data(p=n,T=t,dim_F=3,lags_F=2,lags_X=1,ar_F = 2, ar_Y = 3,up_F = 0.5)
 #data_x <- data$X
 
 ####################### define initial inputs for optim 
