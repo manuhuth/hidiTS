@@ -24,6 +24,7 @@ convert_factors_dgp <- function(data) {
   q <- ncol(data$L[[1]])
   lags <- qp1/q-1
   F_dgp <- stack_F_matrix(data$F, lags, lags)
+  T <- ncol(data$F)
 
 
   V <- var(t(F_dgp))

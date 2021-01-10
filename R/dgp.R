@@ -231,7 +231,7 @@ sim_Y <- function(F, ar_F, ar_Y, start_F_ar, beta = NULL, gamma = NULL, low = -0
 
   lags <- max(ar_F, ar_Y)
 
-  epsilon <- mvrnorm(n = 1, mu = rep(0, T), Sigma = vcv_epsilon)
+  epsilon <- rnorm(n=T, mean=0, sd = vcv_epsilon) #mvrnorm(n = 1, mu = rep(0, T), Sigma = vcv_epsilon)
 
   Y <- c(0) # necessary to initialize with 0. Is overwritten in first loop
   for (t in 1:lags) {
