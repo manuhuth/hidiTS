@@ -1,10 +1,4 @@
-#rm(list = ls())
-################################functions################################
-
-
-################################theta_wrapper
 # maps initial values from column vector into matrix form for optim
-
 theta_wrapper <- function(theta,n,p,q){
   
   
@@ -31,10 +25,7 @@ theta_wrapper <- function(theta,n,p,q){
 }
 
 
-################################theta_rows
 # gives number of rows for theta vector to create initial values for optimization
-
-
 theta_rows <- function(n,p,q){
   rows=2*((p+1)*q)^2+n*(p+1)*q+n^2
   
@@ -43,9 +34,8 @@ theta_rows <- function(n,p,q){
 }
 
 
-################################initial guess for kalman
 
-
+#initial guess for kalman sigma
 sigma_f_init  <- function(p,q,gamma,sigma_e){
   
   temp <- solve(diag(((p+1)*q)^2) -kronecker(gamma, gamma, FUN = "*")) %*% vec(sigma_e)
@@ -62,7 +52,6 @@ f_init <- function(p,q){
 }
 
 
-################################Kalman filter functions
 
 post_prediction_sigma_f <- function(sigma_f_prior,lambda,sigma_x_prior){
   
@@ -108,8 +97,6 @@ sigma_f_prediction <- function(gamma,sigma_f_post,sigma_e){
 }
 
 
-################################Kalman wrapper
-
 kalman_wrapper_inital_period <- function(lambda,sigma_u,f_inital,sig_f_inital,data){
   
   #prior observation prediction 
@@ -145,10 +132,7 @@ kalman_wrapper <- function(gamma,lambda,sigma_u,sigma_e,f_post_last,sigma_f_post
 }
 
 
-################################likelihood_init
 # calcualtes the log density given paramters using the initial guess from kalman filter
-
-
 likelihood_init <- function(gamma,lambda,sigma_u,sigma_e,data,p,q){
   
   (-n/2 * log(2 * pi) -0.5 * log(det(lambda %*%(sigma_f_init(p=p,q=q,gamma=gamma,sigma_e=sigma_e )) %*% t(lambda) + sigma_u)) 
@@ -156,10 +140,8 @@ likelihood_init <- function(gamma,lambda,sigma_u,sigma_e,data,p,q){
 }
 
 
-################################likelihood
+
 # calcualtes the log density given paramters and kalman posterior f and posterior sigma_f
-
-
 likelihood <- function(gamma,lambda,sigma_u,sigma_e,f_post,sigma_f_post,data){
   
   (-n/2 * log(2 * pi) -0.5 * log(det(lambda %*%(gamma %*% sigma_f_post %*% t(gamma) +sigma_e) %*% t(lambda) + sigma_u)) 
@@ -167,9 +149,7 @@ likelihood <- function(gamma,lambda,sigma_u,sigma_e,f_post,sigma_f_post,data){
 }
 
 
-################################wrapper
-# function used in optim
-# to do: replace loop with apply, check that it produces maximum
+
 
 wrapper <- function(theta,data,n,p,q,t){
   
@@ -211,32 +191,3 @@ wrapper <- function(theta,data,n,p,q,t){
   
 }
 
-###############################short script   ################################
-
-###############################execution   
-
-################################parameter   
-
-#n=3 #number of time series
-#q=2 #number of factors
-#p=2#factor dimension
-#t=5 #lags of xs
-#start_ar=4
-#rows=theta_rows(n=n,p=p,q=q)
-
-################################data       
-#data <-sim_data(p=n,T=t,dim_F=3,lags_F=2,lags_X=1,ar_F = 2, ar_Y = 3,up_F = 0.5)
-#data_x <- data$X
-
-####################### define initial inputs for optim 
-
-#init <- matrix(runif(rows, min = 1, max = 10), nrow = rows, ncol = 1)
-
-
-########## optim function 
-
-#rslt=optim(par=init,wrapper,data=data_x,n=n,p=p,q=q,t=t,method = "SANN")
-
-#rslt$par
-
-#theta_wrapper(rslt$par,n=n,p=p,q=q)
