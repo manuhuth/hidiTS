@@ -51,25 +51,32 @@ convert_factors_dgp <- function(data) {
 
 
 convert_factors_ML <- function(Lambda, factors, q) {
-  F_ML <- do.call(cbind, factors)[1:q,]
   L <- Lambda[[1]]
+
   qp1 <- ncol(L)
   lags <- qp1/q-1
+  F_ML <- do.call(cbind, factors)[1:q,]
   T <- ncol(F_ML)
+
+  help_stack <- c()
+  for (index in 1:(lags+1)) {
+     help_stack <- cbind(help_stack, factors[[1]][(qp1-q*(index)+1):qp1-q*(index-1)+1])
+  }
+
+  F_stacked <- cbind(help_stack, F_ML[,2:T])
 
   V <- var(t(F_ML))
   theta <- eigen(V)$vectors
-  D <- diag(1/eigen(V)$values^0.5, q)
-  F_unc <- D %*% t(theta) %*% F_ML
+  D <- diag(1/eigen(V)$values^0.5, qp1)
+  F_unc <- D %*% t(theta) %*% F_stacked
 
 
   L_unc <- L %*% solve(D %*% t(theta))
   QR <- qr(t(L_unc[1:qp1, 1:qp1]))
   L_qr <- qr.Q(QR)
-  
-  F_stacked <- stack_F_matrix(F=F_unc, lags=lags, start_ar=lags)
-  
-  new_F <- L_qr%*%F_stacked
+
+
+  new_F <- L_qr%*%F_unc
   new_L <- L_unc %*% L_qr
 
   if (lags == 0) {
