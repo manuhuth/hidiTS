@@ -51,7 +51,7 @@ convert_factors_dgp <- function(data) {
 
 
 convert_factors_ML <- function(Lambda, factors, q) {
-  F_ML <- do.call(cbind, factors)
+  F_ML <- do.call(cbind, factors)[1:q,]
   L <- Lambda[[1]]
   qp1 <- ncol(L)
   lags <- qp1/q-1
@@ -59,14 +59,17 @@ convert_factors_ML <- function(Lambda, factors, q) {
 
   V <- var(t(F_ML))
   theta <- eigen(V)$vectors
-  D <- diag(1/eigen(V)$values^0.5, qp1)
+  D <- diag(1/eigen(V)$values^0.5, q)
   F_unc <- D %*% t(theta) %*% F_ML
 
 
   L_unc <- L %*% solve(D %*% t(theta))
   QR <- qr(t(L_unc[1:qp1, 1:qp1]))
   L_qr <- qr.Q(QR)
-  new_F <- L_qr%*%F_unc
+  
+  F_stacked <- stack_F_matrix(F=F_unc, lags=lags, start_ar=lags)
+  
+  new_F <- L_qr%*%F_stacked
   new_L <- L_unc %*% L_qr
 
   if (lags == 0) {
@@ -78,4 +81,3 @@ convert_factors_ML <- function(Lambda, factors, q) {
   output <- list('F' = F_out, 'Lambda' = new_L)
   return(output)
 }
-
