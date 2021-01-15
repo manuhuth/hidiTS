@@ -372,7 +372,7 @@ optim_wrapper <- function(data_param,optim_func,data_x,n,p,q,k,t,post_F,post_P,m
   
 }
 
-estimate_f <- function(data_param,data_x,n,p,q,k,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=FALSE,it=4,method = "Nelder-Mead"){
+estimate_f <- function(data_param,data_x,n,p,q,k,t,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=FALSE,it=4,method = "Nelder-Mead"){
   
   
   matrices <- matrix_form(data=data_param,n=n,p=p,q=q,k=k,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag)
