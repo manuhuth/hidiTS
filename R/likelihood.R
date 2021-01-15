@@ -407,10 +407,39 @@ estimate_f <- function(data_param,data_x,n,p,q,k,gamma_res=TRUE,lambda_res=TRUE,
     rslt_while_counter <- optim_wrapper(data_param=list_param[[(length(list_param))]],optim_func=likelihood_wrapper,data_x=data_x,n=n,p=p,q=q,k=k,t=t,post_F=list_f[[(length(list_f))]],post_P=list_sigma_f[[(length(list_sigma_f))]],method = method)
     print(rslt_while_counter$params)
     list_param <- append(list_param,list(rslt_while_counter$params))
-    list_f[counter+1] <- rslt_while_counter$post_F
+    list_f[[counter+1]] <- rslt_while_counter$post_F
     list_sigma_f <- append(list_sigma_f, list(rslt_while_counter$post_P))
     
     counter <- counter + 1
     
   }
   
+    
+  last_param <- list_param[[length(list_param)]]
+  
+  last_matrices<- matrix_form(data=last_param,n=n,p=p,q=q,k=k,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag)  
+  
+  last_lambda <- list(last_matrices$lambda)
+  
+  last_gamma <- list(last_matrices$gamma)
+  
+  last_sigma_e <- list(last_matrices$sigma_e)
+  
+  last_sigma_u <- list(last_matrices$sigma_u)  
+  
+  
+  # map results from kalman f into f vector 
+  
+  last_fs <- list_f[[(length(list_f))]]
+  
+  
+  f_final <- do.call(cbind,last_fs)[1:q,]
+  F_final <- do.call(cbind,last_fs)
+  
+  
+  output =list("f_final"=f_final,"F_final"=F_final,"list_f"=list_f,"param" =list_param, "lambda"=last_lambda,"gamma" =last_gamma, "sigma_e"=last_sigma_e,"sigma_u" =last_sigma_u)
+  
+  return(output)
+  
+  
+}
