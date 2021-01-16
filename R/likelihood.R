@@ -90,6 +90,12 @@ gamma_matrix <- function(p,q,k,data,restricted=TRUE){
 #' @return Gamma matrix 
 lambda_matrix <-function(data,n,p,q,restricted=TRUE){
   
+  if( (n < (p+1)*q) & (restricted==TRUE) ){
+    
+    stop('Restriction of lambda not possible given n,p,q')
+    
+  }
+  
   if(isTRUE(restricted)){
     
     upper <- matrix(data = rep(0),nrow=(p+1)*q,ncol=(p+1)*q)
@@ -166,6 +172,9 @@ sigma_e_matrix <- function(p,q,data){
 #' @return number of paramaters over all matrices in theta
 matrix_form <- function(data,n,p,q,k,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=FALSE){
   
+  op=options(warn=2)
+  
+  
   if(isTRUE(gamma_res)){
     last_gamma <- q
     gamma <- gamma_matrix(p=p,q=q,k=k,data = data[1:q],restricted=TRUE)
@@ -176,15 +185,25 @@ matrix_form <- function(data,n,p,q,k,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag
     
   }
   
+
+  
   if(isTRUE(lambda_res)){
+    
+    if( (n < (p+1)*q) ){stop('Restriction of lambda not possible given n,p,q')}
+    
     last_lambda <- last_gamma + 0.5*(1+(p+1)*q)*((p+1)*q) + ((n-(p+1)*q)*(p+1)*q)
-    lambda <- lambda_matrix(data=data[last_gamma+1:last_lambda],n=n,p=p,q=q,restricted = TRUE)
+    lambda <- lambda_matrix(data=data[(last_gamma+1):last_lambda],n=n,p=p,q=q,restricted = TRUE)
     
   }  else {
+   
     last_lambda <- last_gamma + n*(p+1)*q
-    lambda <- lambda_matrix(data=data[last_gamma+1:last_lambda],n=n,p=p,q=q,restricted = FALSE)
+    print(length(data[last_gamma+1:last_lambda]))
+    print(data[last_gamma+1:last_lambda])
+    lambda <- lambda_matrix(data=data[(last_gamma+1):last_lambda],n=n,p=p,q=q,restricted = FALSE)
     
   }
+  
+
   
   if(sigma_u_diag==FALSE){
     #sigma_u
@@ -198,10 +217,12 @@ matrix_form <- function(data,n,p,q,k,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag
   }
   #sigma_e
   
+  
   sigma_e <- sigma_e_matrix(data=data[(last_sigma_u+1):(length(data))],p=p,q=q)
   
   output <- list("gamma" = gamma, "lambda" = lambda, "sigma_u" = sigma_u, "sigma_e" = sigma_e)
   
+  options(op)
   return(output) 
   
 }
@@ -217,7 +238,11 @@ number_of_param <- function(n,p,q,k,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=
   
   #restricted lambda
   if(isTRUE(lambda_res)) {
+    
+    if( (n < (p+1)*q) ){stop('Restriction of lambda not possible given n,p,q')}
+    
     p_lambda <- 0.5*(1+F_dim)*F_dim + (n-F_dim)*F_dim
+  
   } else {
     #unrestricted lambda
     p_lambda <- n*F_dim
@@ -251,9 +276,11 @@ number_of_param <- function(n,p,q,k,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=
   p_sigma_e <- q
   
   
-  rows =  p_lambda + p_gamma + p_sigma_u + p_sigma_e
+  num_param =  p_lambda + p_gamma + p_sigma_u + p_sigma_e
   
-  return(rows)
+  
+  
+  return(num_param)(n,p,q,k,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=FALSE)
   
 }
 
