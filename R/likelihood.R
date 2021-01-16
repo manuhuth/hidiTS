@@ -1,7 +1,7 @@
 #'auxiliary function in gamma_matrix that creates diag small gamma matrices
 #'@param chuncks list of equially sized data clusters
 #'@return list of gamma matrices
-create_gammas <- function(chunks){
+create_gammas <- function(chunks,q){
   
   gammas <- vector(mode = "list", length = length(chunks))
   for (i in 1:length(chunks)){
