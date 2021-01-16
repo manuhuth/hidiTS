@@ -197,8 +197,6 @@ matrix_form <- function(data,n,p,q,k,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag
   }  else {
    
     last_lambda <- last_gamma + n*(p+1)*q
-    print(length(data[last_gamma+1:last_lambda]))
-    print(data[last_gamma+1:last_lambda])
     lambda <- lambda_matrix(data=data[(last_gamma+1):last_lambda],n=n,p=p,q=q,restricted = FALSE)
     
   }
