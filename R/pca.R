@@ -11,6 +11,7 @@ pca_estimator <- function(X, number) {
 
 convert_pca_estimator <- function(pca_est, q){
   F <- pca_est$F
+  T <- ncol(F)
   qp1 <- nrow(F)
   lags <- qp1/q-1
   Lambda <- pca_est$Lambda
