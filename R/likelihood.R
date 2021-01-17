@@ -372,113 +372,102 @@ likelihood_wrapper <- function(data_param,data_x,n,p,q,k,t,gamma_res=TRUE,lambda
 
 }
 
-optim_wrapper <- function(data_param,optim_func,data_x,n,p,q,k,t,post_F,post_P,method = "Nelder-Mead"){
 
-
-  rslt=optim(par=data_param, fn=optim_func,data_x=data_x,n=n,p=p,q=q,k=k,t=t,post_F=post_F,post_P=post_P,control=list(fnscale=-1),method = method)
-  #rslt$par
-
+optim_wrapper <- function(data_param,optim_func,data_x,n,p,q,k,t,gamma_res=FALSE,lambda_res=TRUE,sigma_u_diag=TRUE,post_F,post_P,optim_control=list(fnscale=-1),method = "Nelder-Mead"){
+  
+  rslt=optim(par=data_param, fn=optim_func,data_x=data_x,n=n,p=p,q=q,k=k,t=t,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag,post_F=post_F,post_P=post_P,control=optim_control,method = method)
+  
   params <- rslt$par
-
-  matrices <- matrix_form(rslt$par,n=n,p=p,q=q,k=k)
-
-  gamma <- list(matrices$gamma)
-
-  lambda <- list(matrices$lambda)
-
-  sigma_e <- list(matrices$sigma_e)
-
-  sigma_u <- list(matrices$sigma_u)
-
-  Kalman_rslt <- Kalman(q=q,p=p,T=t,n=n, lambda=lambda, gamma=gamma, Sigma_e=sigma_e, Sigma_u=sigma_u ,start_ar=0,X=data_test)
-
+  
+  matrices_upd <- matrix_form(rslt$par,n=n,p=p,q=q,k=k,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag)
+  
+  gamma_upd <- list(matrices_upd$gamma)
+  
+  lambda_upd <- list(matrices_upd$lambda)
+  
+  sigma_e_upd <- list(matrices_upd$sigma_e)
+  
+  sigma_u_upd <- list(matrices_upd$sigma_u)
+  
+  Kalman_rslt <- Kalman(q=q,p=p,T=t,n=n, lambda=lambda_upd, gamma=gamma_upd, Sigma_e=sigma_e_upd, Sigma_u=sigma_u_upd ,start_ar=0,X=data_x)
+  
   Fsmooth_upd <- Kalman_rslt$Fsmooth
+  
   Psmooth_upd <- Kalman_rslt$Psmooth
-
-  #post_F_list[[(j+1)]] <- Fsmooth_upd
-  #post_P_list[[(j+1)]] <- Psmooth_upd
-
-  #post_F_list <<- post_F_list
-
-  #post_P_list <<- post_P_list
-
+  
   output <- list("params" = params, "post_F" = Fsmooth_upd, "post_P" =Psmooth_upd)
   return(output)
-
-
-
+  
+  
 }
 
-estimate_f <- function(data_param,data_x,n,p,q,k,t,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=FALSE,it=4,method = "Nelder-Mead"){
 
-
+estimate_f <- function(data_param,data_x,n,p,q,k,t,gamma_res=FALSE,lambda_res=TRUE,sigma_u_diag=TRUE,it=4,method = "Nelder-Mead"){
+  
   matrices <- matrix_form(data=data_param,n=n,p=p,q=q,k=k,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag)
-
+  
   lambda <- list(matrices$lambda)
-
+  
   gamma <- list(matrices$gamma)
-
+  
   sigma_e <- list(matrices$sigma_e)
-
+  
   sigma_u <- list(matrices$sigma_u)
-
+  
   Kalman_first <- Kalman(q=q,p=p,T=t,n=n, lambda=lambda, gamma=gamma, Sigma_e=sigma_e, Sigma_u=sigma_u ,start_ar=0,X=data_x)
-
+  
   fsmooth1 <- Kalman_first$Fsmooth
   psmooth1 <- Kalman_first$Psmooth
-
+  
   list_param= vector(mode = "list", length = 0)
   list_f= vector(mode = "list", length = 0)
   list_sigma_f= vector(mode = "list", length = 0)
-
+  
   list_param[[1]] <- data_param_init
   list_f[[1]] <- fsmooth1
   list_sigma_f[[1]] <- psmooth1
-
-  # perform loop with likelihood estimation  for parameters and kalman filter
-
+  
   counter <- 1
-
+  
   while (counter <= it){
-
-    rslt_while_counter <- optim_wrapper(data_param=list_param[[(length(list_param))]],optim_func=likelihood_wrapper,data_x=data_x,n=n,p=p,q=q,k=k,t=t,post_F=list_f[[(length(list_f))]],post_P=list_sigma_f[[(length(list_sigma_f))]],method = method)
+    
+    rslt_while_counter <- optim_wrapper(data_param=list_param[[counter]],optim_func=likelihood_wrapper,data_x=data_x,n=n,p=p,q=q,k=k,t=t,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag,post_F=list_f[[counter]],post_P=list_sigma_f[[counter]],method = method)
     print(rslt_while_counter$params)
     list_param <- append(list_param,list(rslt_while_counter$params))
-    list_f[[counter+1]] <- rslt_while_counter$post_F
+    list_f[[(counter+1)]] <- rslt_while_counter$post_F
     list_sigma_f <- append(list_sigma_f, list(rslt_while_counter$post_P))
-
+    
     counter <- counter + 1
-
+   
   }
-
-
+  
   last_param <- list_param[[length(list_param)]]
-
+  
   last_matrices<- matrix_form(data=last_param,n=n,p=p,q=q,k=k,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag)
-
+  
   last_lambda <- list(last_matrices$lambda)
-
+  
   last_gamma <- list(last_matrices$gamma)
-
+  
   last_sigma_e <- list(last_matrices$sigma_e)
-
+  
   last_sigma_u <- list(last_matrices$sigma_u)
-
-
+  
+  
   # map results from kalman f into f vector
-
+  
   last_fs <- list_f[[(length(list_f))]]
-
-
+  
+  
   f_final <- do.call(cbind,last_fs)[1:q,]
   F_final <- do.call(cbind,last_fs)
-
-
-  output =list("f_final"=f_final,"F_final"=F_final,"list_f"=list_f,"param" =list_param, "lambda"=last_lambda,"gamma" =last_gamma, "sigma_e"=last_sigma_e,"sigma_u" =last_sigma_u)
-
+  
+  
+  output =list("f_final"=f_final,"F_final"=F_final,"list_f"=list_f,"list_sigma_f"=list_sigma_f,"param" =list_param, "lambda"=last_lambda,"gamma" =last_gamma, "sigma_e"=last_sigma_e,"sigma_u" =last_sigma_u)
+  
   return(output)
-
-
+  
+  
 }
 
 
