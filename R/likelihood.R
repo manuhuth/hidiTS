@@ -482,7 +482,7 @@ estimate_f <- function(data_param,data_x,n,p,q,k,t,gamma_res=TRUE,lambda_res=TRU
 }
 
 
-starting_values_ML <- function(data_test, sigma_u_diag=TRUE) {
+starting_values_ML <- function(data_test, sigma_u_diag=TRUE, sigma_u_ID=TRUE, sigma_eta_ID=TRUE) {
   #input must be data list created with data_only = FALSE
 
   t <- ncol(data_test$F)
@@ -502,6 +502,9 @@ starting_values_ML <- function(data_test, sigma_u_diag=TRUE) {
   X <- data_test$X
   u_hat <- X - X_hat
   u_VCV <- var(t(u_hat))
+  if (isTRUE(sigma_u_ID)) {
+    u_VCV <- diag(1,nrow=nrow(u_VCV), ncol=ncol(u_VCV))
+  }
 
   #make regression with small fs -> build small fs and do gamma regression separate
   F_estimated <- c()
@@ -524,6 +527,10 @@ starting_values_ML <- function(data_test, sigma_u_diag=TRUE) {
 
   eta_hat <- F_start[1:q,1:(t-k)] - F_estimated
   sigma_e_hat <- var(t(eta_hat))
+
+  if (isTRUE(sigma_eta_ID)) {
+    sigma_e_hat <- diag(1,nrow=nrow(sigma_e_hat), ncol=ncol(sigma_e_hat))
+  }
 
   data_param_init <- vec(gammas)
 
