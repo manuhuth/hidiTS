@@ -1,4 +1,4 @@
-#devtools::install(dependencies = TRUE)
+devtools::install(dependencies = TRUE)
 library(hidiTS)
 rm(list = ls())
 set.seed(123)
@@ -16,7 +16,7 @@ data_test <- sim_data(p = n, T = t, dim_F= q, lags_F=k, lags_X=p, ar_F=1, ar_Y=1
                       only_stationary = TRUE, epsilon = 0.0002, max_it_station = 500, adjust_diag = FALSE,
                       geometric_F =TRUE, diag_F = TRUE, geometric_X =FALSE, geometric_Y =FALSE)
 
-data_param_init <- starting_values_ML(data_test)
+data_param_init <- starting_values_ML(data_test,sigma_u_diag=TRUE, sigma_u_ID=TRUE, sigma_eta_ID=TRUE)
 
 matrices <- matrix_form(data=data_param_init,n=n,p=p,q=q,k=k,gamma_res=FALSE,lambda_res=TRUE,sigma_u_diag=TRUE)
 
@@ -51,7 +51,8 @@ gamma2 <- list(matrices_2$gamma)
 sigma_e2 <- list(matrices_2$sigma_e)
 sigma_u2 <- list(matrices_2$sigma_u)
 
-Kalman_second <- Kalman(q=q,p=p,T=t,n=n, lambda=lambda2, gamma=gamma2, Sigma_e=sigma_e2, Sigma_u=sigma_u2 ,start_ar=0,X=data_test)
+Kalman_second <- Kalman(q=q,p=p,T=t,n=n, lambda=lambda2, gamma=gamma2,
+                        Sigma_e=sigma_e2, Sigma_u=sigma_u2 ,start_ar=0,X=data_test)
 
 fsmooth2 <- Kalman_second$Fsmooth
 psmooth2 <- Kalman_second$Psmooth
