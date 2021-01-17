@@ -532,7 +532,7 @@ starting_values_ML <- function(data_test, sigma_u_diag=TRUE) {
   }
 
 
-  if (isTrue(sigma_u_diag)) {
+  if (isTRUE(sigma_u_diag)) {
     data_param_init <- c(data_param_init, diag(u_VCV))
   } else{
     for (index in 1:(ncol(u_VCV)) ) {
