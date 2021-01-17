@@ -135,20 +135,21 @@ lambda_matrix <-function(data,n,p,q,restricted=TRUE){
 #' @param n dimension
 #' @return symmetric matrix
 sigma_u_matrix <- function(data,n,diag_res=FALSE){
-
+  
   if(isTRUE(diag_res)){
     sigma_u <-diag(x=data,n,n)
     return(sigma_u)
   } else  {
-
-    sigma_u <-diag(x=data[1:n],n,n)
-    sigma_u[lower.tri(sigma_u,diag = FALSE)] <- data[n+1: (length(data)-n)]
-    sigma_u[upper.tri(sigma_u,diag = FALSE)] <- t(sigma_u)[upper.tri(t(sigma_u),diag = FALSE)]
-
-    #sigma_u[upper.tri(sigma_u,diag = FALSE)] <- data_par[n+1: length(data)]
+    
+    sigma_u <- matrix(rep(0,n*n),n,n)
+    sigma_u[lower.tri(sigma_u,diag=TRUE)] <- data
+    sigma_u <- sigma_u+t(sigma_u)
+    
+    diag(sigma_u)<-diag(sigma_u)/2
+    
     return(sigma_u)
   }
-
+  
 }
 
 #' creates sigma_e matrix as described in paper
