@@ -89,35 +89,46 @@ gamma_matrix <- function(p,q,k,data,restricted=TRUE){
 #' @param restricted if TRUE restricts Lambda to structure by Bai,Ng (2013)
 #' @return Gamma matrix
 lambda_matrix <-function(data,n,p,q,restricted=TRUE){
-
+  
   if( (n < (p+1)*q) & (restricted==TRUE) ){
-
+    
     stop('Restriction of lambda not possible given n,p,q')
-
+    
   }
-
+  
   if(isTRUE(restricted)){
-
-    upper <- matrix(data = rep(0),nrow=(p+1)*q,ncol=(p+1)*q)
-    nu <- 0.5*(1+(p+1)*q)*((p+1)*q)
-    upper[lower.tri(upper,diag = TRUE)] <- data[1: nu]
-
-    #lower matrix
-    nl <- (((n-(p+1)*q)*(p+1)*q))
-    lower <- matrix(data[nu+1:nl],nrow=n-(p+1)*q,ncol=(p+1)*q)
-    lambda <- rbind(upper,lower)
-
+    
+    
+    lambda <- matrix(data = 0,nrow=n,ncol=(p+1)*q)
+    
+    vectors <- vector(mode ="list",length = 0)
+    data_temp <- data
+    
+    for (i in 0:((p+1)*q-1)){
+      
+      vectors[[(i+1)]] <- data_temp[1:(n-i)]
+      data_temp <- tail(data_temp, -(length(vectors[[(i+1)]])))
+      
+    }
+    
+    for (i in 1:((p+1)*q)){
+      lambda[(i:n),i]=vectors[[i]]
+    }
+    
+    
+    
     return(lambda)
-
-
+    
+    
   }else{
-
+    
     lambda <- matrix(data=data, nrow = n, ncol = (p+1)*q)
-
+    
     return(lambda)
-
+    
   }
 }
+
 
 #' creates symmetric matrix of dimension n x n
 #' @param data vector of data points to supply
