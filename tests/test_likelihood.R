@@ -1,40 +1,29 @@
-#rm(list = ls())
+#devtools::install(dependencies = TRUE)
+library(hidiTS)
+rm(list = ls())
+set.seed(123)
 
-#install.packages("devtools") #only once
+n=10
+p=0
+q=2
+t=15
+k=1
 
+data_test <- sim_data(p = n, T = t, dim_F= q, lags_F=k, lags_X=p, ar_F=1, ar_Y=1, A = NULL, low_X = -3^0.5, up_X = 3^0.5,
+                      L = NULL, low_F = 0.2, up_F = 0.9,
+                      beta = NULL, gamma = NULL, low_Y = -0.9, up_Y = 0.9,
+                      burn_in = 20, data_only = FALSE,
+                      only_stationary = TRUE, epsilon = 0.0002, max_it_station = 500, adjust_diag = FALSE,
+                      geometric_F =TRUE, diag_F = TRUE, geometric_X =FALSE, geometric_Y =FALSE)
 
-#library(hidiTS)
-#library(matrixcalc)
-#set.seed(1234)
-set.seed(4511)
-#set.seed(98531)
-#set.seed(445)
+data_param_init <- starting_values_ML(data_test)
 
-
-n=20
-p=3
-q=4
-t=10
-k=3
-
-#gamma_matrix(p=p,q=q,k=k,data=runif(q,1,2),restricted=TRUE)
-
-elements <- number_of_param(n=n,p=p,q=q,k=k,lambda_res = TRUE,gamma_res = TRUE,sigma_u_diag=FALSE)
-
-data_param_init <- runif(elements,0.05,0.2)
-
-data_test <- sim_data(p=n,T=t)
-
-matrices <- matrix_form(data=data_param_init,n=n,p=p,q=q,k=k,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=FALSE)
+matrices <- matrix_form(data=data_param_init,n=n,p=p,q=q,k=k,gamma_res=FALSE,lambda_res=TRUE,sigma_u_diag=TRUE)
 
 lambda <- list(matrices$lambda)
-
 gamma <- list(matrices$gamma)
-
 sigma_e <- list(matrices$sigma_e)
-
-sigma_u <- list(matrices$sigma_u)  
-
+sigma_u <- list(matrices$sigma_u)
 Kalman_first <- Kalman(q=q,p=p,T=t,n=n, lambda=lambda, gamma=gamma, Sigma_e=sigma_e, Sigma_u=sigma_u ,start_ar=0,X=data_test)
 
 
@@ -50,28 +39,28 @@ list_f[[1]] <- fsmooth1
 list_sigma_f[[1]] <- psmooth1
 
 
-rslt1 <- optim(par=data_param_init,likelihood_wrapper,data_x=data_test,n=n,p=p,q=q,k=k,t=t,post_F=fsmooth1,post_P=psmooth1,control=list(fnscale=-1),method = "Nelder-Mead")
+rslt1 <- optim(par=data_param_init,likelihood_wrapper,data_x=data_test,n=n,
+               p=p,q=q,k=k,t=t,gamma_res=FALSE,lambda_res=TRUE,sigma_u_diag=TRUE,post_F=fsmooth1,
+               post_P=psmooth1,control=list(fnscale=-1, trace=list(1)),method = "Nelder-Mead")
 
 
-matrices_2 <- matrix_form(rslt1$par,n=n,p=p,q=q,k=k)
+matrices_2 <- matrix_form(rslt1$par,n=n,p=p,q=q,k=k,gamma_res=FALSE,lambda_res=TRUE,sigma_u_diag=TRUE)
 
 lambda2 <- list(matrices_2$lambda)
-
 gamma2 <- list(matrices_2$gamma)
-
 sigma_e2 <- list(matrices_2$sigma_e)
-
 sigma_u2 <- list(matrices_2$sigma_u)
-
 
 Kalman_second <- Kalman(q=q,p=p,T=t,n=n, lambda=lambda2, gamma=gamma2, Sigma_e=sigma_e2, Sigma_u=sigma_u2 ,start_ar=0,X=data_test)
 
 fsmooth2 <- Kalman_second$Fsmooth
 psmooth2 <- Kalman_second$Psmooth
 
+conv <- convert_factors_ML(Lambda=lambda2, factors=fsmooth2,q=q)
 
-do.call(cbind,fsmooth2)
-do.call(cbind,fsmooth2)[1:q,]
+con_dgp <- convert_factors_dgp(data_test)
+plot(conv$F[2,], type = 'l')
+lines(con_dgp$F[2,], type='l', col='red')
 
 
 #rslt2=optim(par=rslt1$par,likelihood_wrapper,data_x=data_test,n=n,p=p,q=q,k=k,t=t,post_F=fsmooth2,post_P=psmooth2,control=list(fnscale=-1),method = "Nelder-Mead")
