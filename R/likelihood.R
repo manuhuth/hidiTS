@@ -89,43 +89,43 @@ gamma_matrix <- function(p,q,k,data,restricted=TRUE){
 #' @param restricted if TRUE restricts Lambda to structure by Bai,Ng (2013)
 #' @return Gamma matrix
 lambda_matrix <-function(data,n,p,q,restricted=TRUE){
-  
+
   if( (n < (p+1)*q) & (restricted==TRUE) ){
-    
+
     stop('Restriction of lambda not possible given n,p,q')
-    
+
   }
-  
+
   if(isTRUE(restricted)){
-    
-    
+
+
     lambda <- matrix(data = 0,nrow=n,ncol=(p+1)*q)
-    
+
     vectors <- vector(mode ="list",length = 0)
     data_temp <- data
-    
+
     for (i in 0:((p+1)*q-1)){
-      
+
       vectors[[(i+1)]] <- data_temp[1:(n-i)]
       data_temp <- tail(data_temp, -(length(vectors[[(i+1)]])))
-      
+
     }
-    
+
     for (i in 1:((p+1)*q)){
       lambda[(i:n),i]=vectors[[i]]
     }
-    
-    
-    
+
+
+
     return(lambda)
-    
-    
+
+
   }else{
-    
+
     lambda <- matrix(data=data, nrow = n, ncol = (p+1)*q)
-    
+
     return(lambda)
-    
+
   }
 }
 
@@ -135,21 +135,21 @@ lambda_matrix <-function(data,n,p,q,restricted=TRUE){
 #' @param n dimension
 #' @return symmetric matrix
 sigma_u_matrix <- function(data,n,diag_res=FALSE){
-  
+
   if(isTRUE(diag_res)){
     sigma_u <-diag(x=data,n,n)
     return(sigma_u)
   } else  {
-    
+
     sigma_u <- matrix(rep(0,n*n),n,n)
     sigma_u[lower.tri(sigma_u,diag=TRUE)] <- data
     sigma_u <- sigma_u+t(sigma_u)
-    
+
     diag(sigma_u)<-diag(sigma_u)/2
-    
+
     return(sigma_u)
   }
-  
+
 }
 
 #' creates sigma_e matrix as described in paper
@@ -482,7 +482,7 @@ estimate_f <- function(data_param,data_x,n,p,q,k,t,gamma_res=TRUE,lambda_res=TRU
 }
 
 
-starting_values_ML <- function(data_test) {
+starting_values_ML <- function(data_test, sigma_u_diag=TRUE) {
   #input must be data list created with data_only = FALSE
 
   t <- ncol(data_test$F)
@@ -532,8 +532,12 @@ starting_values_ML <- function(data_test) {
   }
 
 
-  for (index in 1:(ncol(u_VCV)) ) {
-    data_param_init <- c(data_param_init, u_VCV[(1+index-1):n,index])
+  if (isTrue(sigma_u_diag)) {
+    data_param_init <- c(data_param_init, diag(u_VCV))
+  } else{
+    for (index in 1:(ncol(u_VCV)) ) {
+      data_param_init <- c(data_param_init, u_VCV[(1+index-1):n,index])
+    }
   }
 
   data_param_init <- c(data_param_init, diag(sigma_e_hat))
