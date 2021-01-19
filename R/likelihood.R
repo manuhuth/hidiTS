@@ -373,11 +373,14 @@ likelihood_wrapper <- function(data_param,data_x,n,p,q,k,t,gamma_res=TRUE,lambda
 }
 
 
+
 optim_wrapper <- function(data_param,optim_func,data_x,n,p,q,k,t,gamma_res=FALSE,lambda_res=TRUE,sigma_u_diag=TRUE,post_F,post_P,optim_control=list(fnscale=-1),method = "Nelder-Mead"){
   
   rslt=optim(par=data_param, fn=optim_func,data_x=data_x,n=n,p=p,q=q,k=k,t=t,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag,post_F=post_F,post_P=post_P,control=optim_control,method = method)
   
   params <- rslt$par
+  
+  value <- rslt$value
   
   matrices_upd <- matrix_form(rslt$par,n=n,p=p,q=q,k=k,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag)
   
@@ -395,14 +398,16 @@ optim_wrapper <- function(data_param,optim_func,data_x,n,p,q,k,t,gamma_res=FALSE
   
   Psmooth_upd <- Kalman_rslt$Psmooth
   
-  output <- list("params" = params, "post_F" = Fsmooth_upd, "post_P" =Psmooth_upd)
+  output <- list("params" = params, "post_F" = Fsmooth_upd, "post_P" =Psmooth_upd, "value"=value)
   return(output)
   
   
 }
 
 
-estimate_f <- function(data_param,data_x,n,p,q,k,t,gamma_res=FALSE,lambda_res=TRUE,sigma_u_diag=TRUE,it=4,method = "Nelder-Mead"){
+
+
+estimate_f <- function(data_param,data_x,n,p,q,k,t,gamma_res=FALSE,lambda_res=TRUE,sigma_u_diag=TRUE,it=1,method = "Nelder-Mead"){
   
   matrices <- matrix_form(data=data_param,n=n,p=p,q=q,k=k,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag)
   
@@ -422,6 +427,8 @@ estimate_f <- function(data_param,data_x,n,p,q,k,t,gamma_res=FALSE,lambda_res=TR
   list_param= vector(mode = "list", length = 0)
   list_f= vector(mode = "list", length = 0)
   list_sigma_f= vector(mode = "list", length = 0)
+  value=vector(mode = "list", length = 0)
+  
   
   list_param[[1]] <- data_param_init
   list_f[[1]] <- fsmooth1
@@ -436,9 +443,10 @@ estimate_f <- function(data_param,data_x,n,p,q,k,t,gamma_res=FALSE,lambda_res=TR
     list_param <- append(list_param,list(rslt_while_counter$params))
     list_f[[(counter+1)]] <- rslt_while_counter$post_F
     list_sigma_f <- append(list_sigma_f, list(rslt_while_counter$post_P))
+    value[[counter]] <- rslt_while_counter$value
     
     counter <- counter + 1
-   
+    
   }
   
   last_param <- list_param[[length(list_param)]]
@@ -463,12 +471,13 @@ estimate_f <- function(data_param,data_x,n,p,q,k,t,gamma_res=FALSE,lambda_res=TR
   F_final <- do.call(cbind,last_fs)
   
   
-  output =list("f_final"=f_final,"F_final"=F_final,"list_f"=list_f,"list_sigma_f"=list_sigma_f,"param" =list_param, "lambda"=last_lambda,"gamma" =last_gamma, "sigma_e"=last_sigma_e,"sigma_u" =last_sigma_u)
+  output =list("f_final"=f_final,"F_final"=F_final,"list_f"=list_f,"list_sigma_f"=list_sigma_f,"param" =list_param, "lambda"=last_lambda,"gamma" =last_gamma, "sigma_e"=last_sigma_e,"sigma_u" =last_sigma_u,"value"=value)
   
   return(output)
   
   
 }
+
 
 
 starting_values_ML <- function(data_test, sigma_u_diag=TRUE, sigma_u_ID=TRUE, sigma_eta_ID=TRUE) {
