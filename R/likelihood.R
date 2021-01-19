@@ -380,7 +380,7 @@ optim_wrapper <- function(data_param,optim_func,data_x,n,p,q,k,t,gamma_res=FALSE
                control=list(fnscale=-1, maxit=max_it),method = method, lower=lower, upper=upper)
   } else{
     rslt=optim(par=data_param, fn=optim_func,data_x=data_x,n=n,p=p,q=q,k=k,t=t,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag,post_F=post_F,post_P=post_P,
-               control=list(fnscale=-1,trace=6, maxit=max_it),method = method, lower=lower, upper=upper)
+               control=list(fnscale=-1,trace=6, maxit=max_it),method = method, lower=lower, upper=upper, trace=trace)
   }
   #rslt$par
 
@@ -398,7 +398,7 @@ optim_wrapper <- function(data_param,optim_func,data_x,n,p,q,k,t,gamma_res=FALSE
 
   sigma_u <- list(matrices$sigma_u)
 
-  Kalman_rslt <- Kalman(q=q,p=p,T=t,n=n, lambda=lambda, gamma=gamma, Sigma_e=sigma_e, Sigma_u=sigma_u ,start_ar=0,X=data_test)
+  Kalman_rslt <- Kalman(q=q,p=p,T=t,n=n, lambda=lambda, gamma=gamma, Sigma_e=sigma_e, Sigma_u=sigma_u ,start_ar=0,X=data_x)
 
   Fsmooth_upd <- Kalman_rslt$Fsmooth
   Psmooth_upd <- Kalman_rslt$Psmooth
@@ -416,7 +416,7 @@ optim_wrapper <- function(data_param,optim_func,data_x,n,p,q,k,t,gamma_res=FALSE
 #clusterExport(cl, 'n')
 #setDefaultCluster(cl = cl)
 
-estimate_f <- function(data_x,n,p,q,k,t,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=FALSE,it=4,method = "L-BFGS-B", parallel = FALSE, max_it = 50){
+estimate_f <- function(data_x,n,p,q,k,t,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=FALSE,it=4,method = "L-BFGS-B", parallel = FALSE, max_it = 50, trace=0){
 
   start_object <- starting_values_ML(data_x,sigma_u_diag=sigma_u_diag, sigma_u_ID=TRUE, sigma_eta_ID=TRUE)
   data_param_init <- start_object$data
@@ -475,11 +475,12 @@ estimate_f <- function(data_x,n,p,q,k,t,gamma_res=TRUE,lambda_res=TRUE,sigma_u_d
     rslt_while_counter <- optim_wrapper(data_param=list_param[[(length(list_param))]],optim_func=likelihood_wrapper,data_x=data_x,n=n,
                                         p=p,q=q,k=k,t=t,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag,
                                         post_F=list_f[[(length(list_f))]],post_P=list_sigma_f[[(length(list_sigma_f))]],
-                                        method = method, lower=lower, upper=upper, max_it=max_it, parallel = parallel)
+                                        method = method, lower=lower, upper=upper, max_it=max_it, parallel = parallel, trace=trace)
     
     list_param <- append(list_param,list(rslt_while_counter$params))
     list_f[[counter+1]] <- rslt_while_counter$post_F
     list_sigma_f <- append(list_sigma_f, list(rslt_while_counter$post_P))
+    value <- rslt_while_counter$value
 
     counter <- counter + 1
 
