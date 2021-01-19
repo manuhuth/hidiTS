@@ -299,7 +299,7 @@ number_of_param <- function(n,p,q,k,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=
 #initial guess for kalman sigma
 sigma_f_init  <- function(p,q,gamma,sigma_e){
 
-  temp <- solve(diag(((p+1)*q)^2) -kronecker(gamma, gamma, FUN = "*")) %*% vec(sigma_e)
+  temp <- solve(diag(((p+1)*q)^2) - kronecker(gamma, gamma, FUN = "*")) %*% vec(sigma_e)
   sigma_f <- matrix(temp, ncol = (p+1)*q, nrow=(p+1)*q)
 
   return(sigma_f)
@@ -316,8 +316,9 @@ f_init <- function(p,q){
 
 # calcualtes the log density given paramters using the initial guess from kalman filter
 likelihood_init <- function(gamma,lambda,sigma_u,sigma_e,data,p,q){
+  d <- det(lambda %*%(sigma_f_init(p=p,q=q,gamma=gamma,sigma_e=sigma_e )) %*% t(lambda) + sigma_u)
 
-  (-n/2 * log(2 * pi) -0.5 * log(det(lambda %*%(sigma_f_init(p=p,q=q,gamma=gamma,sigma_e=sigma_e )) %*% t(lambda) + sigma_u))
+  return(-n/2 * log(2 * pi) -0.5 * log(d)
    - 0.5 * t(((data) -lambda %*% (f_init(q=q,p=p)))) %*% solve(lambda %*%sigma_f_init(p=p,q=q,gamma=gamma,sigma_e=sigma_e)%*% t(lambda) + sigma_u) %*% ((data) - lambda %*%(f_init(q=q,p=p))))
 }
 
@@ -372,112 +373,148 @@ likelihood_wrapper <- function(data_param,data_x,n,p,q,k,t,gamma_res=TRUE,lambda
 
 }
 
+optim_wrapper <- function(data_param,optim_func,data_x,n,p,q,k,t,gamma_res=FALSE,lambda_res=TRUE,sigma_u_diag=TRUE,post_F,post_P,lower,upper,method = "L-BFGS-B", max_it, parallel=FALSE){
 
+  if (isTRUE(parallel)) {
+    rslt=optimParallel(par=data_param, fn=optim_func,data_x=data_x,n=n,p=p,q=q,k=k,t=t,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag,post_F=post_F,post_P=post_P,
+               control=list(fnscale=-1, maxit=max_it),method = method, lower=lower, upper=upper)
+  } else{
+    rslt=optim(par=data_param, fn=optim_func,data_x=data_x,n=n,p=p,q=q,k=k,t=t,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag,post_F=post_F,post_P=post_P,
+               control=list(fnscale=-1,trace=6, maxit=max_it),method = method, lower=lower, upper=upper)
+  }
+  #rslt$par
 
-optim_wrapper <- function(data_param,optim_func,data_x,n,p,q,k,t,gamma_res=FALSE,lambda_res=TRUE,sigma_u_diag=TRUE,post_F,post_P,optim_control=list(fnscale=-1),method = "Nelder-Mead"){
-  
-  rslt=optim(par=data_param, fn=optim_func,data_x=data_x,n=n,p=p,q=q,k=k,t=t,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag,post_F=post_F,post_P=post_P,control=optim_control,method = method)
-  
   params <- rslt$par
   
   value <- rslt$value
-  
-  matrices_upd <- matrix_form(rslt$par,n=n,p=p,q=q,k=k,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag)
-  
-  gamma_upd <- list(matrices_upd$gamma)
-  
-  lambda_upd <- list(matrices_upd$lambda)
-  
-  sigma_e_upd <- list(matrices_upd$sigma_e)
-  
-  sigma_u_upd <- list(matrices_upd$sigma_u)
-  
-  Kalman_rslt <- Kalman(q=q,p=p,T=t,n=n, lambda=lambda_upd, gamma=gamma_upd, Sigma_e=sigma_e_upd, Sigma_u=sigma_u_upd ,start_ar=0,X=data_x)
-  
+
+  matrices <- matrix_form(rslt$par,n=n,p=p,q=q,k=k, gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag)
+
+  gamma <- list(matrices$gamma)
+
+  lambda <- list(matrices$lambda)
+
+  sigma_e <- list(matrices$sigma_e)
+
+  sigma_u <- list(matrices$sigma_u)
+
+  Kalman_rslt <- Kalman(q=q,p=p,T=t,n=n, lambda=lambda, gamma=gamma, Sigma_e=sigma_e, Sigma_u=sigma_u ,start_ar=0,X=data_test)
+
   Fsmooth_upd <- Kalman_rslt$Fsmooth
-  
   Psmooth_upd <- Kalman_rslt$Psmooth
-  
+
+
   output <- list("params" = params, "post_F" = Fsmooth_upd, "post_P" =Psmooth_upd, "value"=value)
   return(output)
-  
-  
+
+
+
 }
 
+#set cluster -> must be outside 
+#cl <- makeCluster(detectCores()-1)
+#clusterExport(cl, 'n')
+#setDefaultCluster(cl = cl)
 
+estimate_f <- function(data_x,n,p,q,k,t,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=FALSE,it=4,method = "L-BFGS-B", parallel = FALSE, max_it = 50){
 
+  start_object <- starting_values_ML(data_x,sigma_u_diag=sigma_u_diag, sigma_u_ID=TRUE, sigma_eta_ID=TRUE)
+  data_param_init <- start_object$data
+  data_param_names <- start_object$names  
+  matrices <- matrix_form(data=data_param_init,n=n,p=p,q=q,k=k,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag)
 
-estimate_f <- function(data_param,data_x,n,p,q,k,t,gamma_res=FALSE,lambda_res=TRUE,sigma_u_diag=TRUE,it=1,method = "Nelder-Mead"){
-  
-  matrices <- matrix_form(data=data_param,n=n,p=p,q=q,k=k,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag)
-  
   lambda <- list(matrices$lambda)
-  
+
   gamma <- list(matrices$gamma)
-  
+
   sigma_e <- list(matrices$sigma_e)
-  
+
   sigma_u <- list(matrices$sigma_u)
-  
+
   Kalman_first <- Kalman(q=q,p=p,T=t,n=n, lambda=lambda, gamma=gamma, Sigma_e=sigma_e, Sigma_u=sigma_u ,start_ar=0,X=data_x)
-  
+
   fsmooth1 <- Kalman_first$Fsmooth
   psmooth1 <- Kalman_first$Psmooth
-  
+
   list_param= vector(mode = "list", length = 0)
   list_f= vector(mode = "list", length = 0)
   list_sigma_f= vector(mode = "list", length = 0)
   value=vector(mode = "list", length = 0)
-  
-  
+
   list_param[[1]] <- data_param_init
   list_f[[1]] <- fsmooth1
   list_sigma_f[[1]] <- psmooth1
   
-  counter <- 1
+  lower_gamma <- -0.8
+  upper_gamma <- 0.8
+  lower_lambda <- -Inf
+  upper_lambda <- Inf
+  lower_sigma_u <- 0.0001
+  upper_sigma_u <- Inf
+  lower_sigma_e <- 0.0001
+  upper_sigma_e <- Inf
   
-  while (counter <= it){
-    
-    rslt_while_counter <- optim_wrapper(data_param=list_param[[counter]],optim_func=likelihood_wrapper,data_x=data_x,n=n,p=p,q=q,k=k,t=t,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag,post_F=list_f[[counter]],post_P=list_sigma_f[[counter]],method = method)
-    print(rslt_while_counter$params)
-    list_param <- append(list_param,list(rslt_while_counter$params))
-    list_f[[(counter+1)]] <- rslt_while_counter$post_F
-    list_sigma_f <- append(list_sigma_f, list(rslt_while_counter$post_P))
-    value[[counter]] <- rslt_while_counter$value
-    
-    counter <- counter + 1
-    
+  names <- c('gamma', 'lambda', 'sigma_u', 'sigma_e')
+  lowers <- c('gamma'=lower_gamma, 'lambda'=lower_lambda, 'sigma_u'=lower_sigma_u, 'sigma_e'=lower_sigma_e )
+  uppers <- c('gamma'=upper_gamma, 'lambda'=upper_lambda, 'sigma_u'=upper_sigma_u, 'sigma_e'=upper_sigma_e )
+  
+  lower <- rep(NaN, length(data_param_init))
+  upper <- rep(NaN, length(data_param_init))
+  
+  for (index in names){
+    lower <- replace(lower, data_param_names == index, lowers[index])
+    upper <- replace(upper, data_param_names == index, uppers[index])
   }
-  
+
+  # perform loop with likelihood estimation  for parameters and kalman filter
+
+  counter <- 1
+
+  while (counter <= it){
+
+    rslt_while_counter <- optim_wrapper(data_param=list_param[[(length(list_param))]],optim_func=likelihood_wrapper,data_x=data_x,n=n,
+                                        p=p,q=q,k=k,t=t,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag,
+                                        post_F=list_f[[(length(list_f))]],post_P=list_sigma_f[[(length(list_sigma_f))]],
+                                        method = method, lower=lower, upper=upper, max_it=max_it, parallel = parallel)
+    
+    list_param <- append(list_param,list(rslt_while_counter$params))
+    list_f[[counter+1]] <- rslt_while_counter$post_F
+    list_sigma_f <- append(list_sigma_f, list(rslt_while_counter$post_P))
+
+    counter <- counter + 1
+
+  }
+
+
   last_param <- list_param[[length(list_param)]]
-  
+
   last_matrices<- matrix_form(data=last_param,n=n,p=p,q=q,k=k,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag)
-  
+
   last_lambda <- list(last_matrices$lambda)
-  
+
   last_gamma <- list(last_matrices$gamma)
-  
+
   last_sigma_e <- list(last_matrices$sigma_e)
-  
+
   last_sigma_u <- list(last_matrices$sigma_u)
-  
-  
+
+
   # map results from kalman f into f vector
-  
+
   last_fs <- list_f[[(length(list_f))]]
-  
-  
+
+
   f_final <- do.call(cbind,last_fs)[1:q,]
   F_final <- do.call(cbind,last_fs)
-  
-  
-  output =list("f_final"=f_final,"F_final"=F_final,"list_f"=list_f,"list_sigma_f"=list_sigma_f,"param" =list_param, "lambda"=last_lambda,"gamma" =last_gamma, "sigma_e"=last_sigma_e,"sigma_u" =last_sigma_u,"value"=value)
-  
-  return(output)
-  
-  
-}
 
+
+  output =list("f_final"=f_final,"F_final"=F_final,"list_f"=list_f,"param" =list_param, "lambda"=last_lambda,
+               "gamma" =last_gamma, "sigma_e"=last_sigma_e,"sigma_u" =last_sigma_u, "value"=value)
+
+  return(output)
+
+
+}
 
 
 starting_values_ML <- function(data_test, sigma_u_diag=TRUE, sigma_u_ID=TRUE, sigma_eta_ID=TRUE) {
@@ -531,21 +568,26 @@ starting_values_ML <- function(data_test, sigma_u_diag=TRUE, sigma_u_ID=TRUE, si
   }
 
   data_param_init <- vec(gammas)
+  params_names <- rep('gamma', length(vec(gammas)))
 
   for (index in 1:((p+1)*q)) {
     data_param_init <- c(data_param_init, Lambda_start[(1+index-1):n,index])
+    params_names <- c(params_names, rep('lambda', length(Lambda_start[(1+index-1):n,index])))
   }
 
 
   if (isTRUE(sigma_u_diag)) {
     data_param_init <- c(data_param_init, diag(u_VCV))
+    params_names <- c(params_names, rep('sigma_u', length(diag(u_VCV))) )
   } else{
     for (index in 1:(ncol(u_VCV)) ) {
       data_param_init <- c(data_param_init, u_VCV[(1+index-1):n,index])
+      params_names <- c(params_names, rep('sigma_u', length(u_VCV[(1+index-1):n,index])) )
     }
   }
 
   data_param_init <- c(data_param_init, diag(sigma_e_hat))
+  params_names <- c(params_names, rep('sigma_e', length(diag(sigma_e_hat))) )
 
-  return(data_param_init)
+  return(list("data"=data_param_init, "names"=params_names))
 }

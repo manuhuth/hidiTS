@@ -51,16 +51,16 @@ convert_factors_dgp <- function(data) {
 
 
 convert_factors_ML <- function(Lambda, factors, q) {
-  L <- Lambda[[1]]
+  L <- Lambda
 
   qp1 <- ncol(L)
   lags <- qp1/q-1
-  F_ML <- do.call(cbind, factors)[1:q,]
+  F_ML <- factors[1:q,]
   T <- ncol(F_ML)
 
   help_stack <- c()
   for (index in 1:(lags+1)) {
-    help_stack <- cbind(help_stack, factors[[1]][(qp1-q*(index)+1):(qp1-q*(index-1))])
+    help_stack <- cbind(help_stack, factors[(qp1-q*(index)+1):(qp1-q*(index-1))])
   }
 
   F_temp <- cbind(help_stack, F_ML[,2:T])
