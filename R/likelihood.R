@@ -377,10 +377,10 @@ optim_wrapper <- function(data_param,optim_func,data_x,n,p,q,k,t,gamma_res=FALSE
 
   if (isTRUE(parallel)) {
     rslt=optimParallel(par=data_param, fn=optim_func,data_x=data_x,n=n,p=p,q=q,k=k,t=t,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag,post_F=post_F,post_P=post_P,
-               control=list(fnscale=-1, maxit=max_it),method = method, lower=lower, upper=upper)
+               control=list(fnscale=-1, maxit=max_it, trace=trace),method = method, lower=lower, upper=upper)
   } else{
     rslt=optim(par=data_param, fn=optim_func,data_x=data_x,n=n,p=p,q=q,k=k,t=t,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag,post_F=post_F,post_P=post_P,
-               control=list(fnscale=-1,trace=6, maxit=max_it),method = method, lower=lower, upper=upper, trace=trace)
+               control=list(fnscale=-1,trace=trace, maxit=max_it),method = method, lower=lower, upper=upper)
   }
   #rslt$par
 
