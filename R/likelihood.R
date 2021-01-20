@@ -386,7 +386,7 @@ optim_wrapper <- function(data_param,optim_func,data_x,n,p,q,k,t,gamma_res=FALSE
   #rslt$par
 
   params <- rslt$par
-  
+
   value <- rslt$value
 
   matrices <- matrix_form(rslt$par,n=n,p=p,q=q,k=k, gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag)
@@ -412,7 +412,7 @@ optim_wrapper <- function(data_param,optim_func,data_x,n,p,q,k,t,gamma_res=FALSE
 
 }
 
-#set cluster -> must be outside 
+#set cluster -> must be outside
 #cl <- makeCluster(detectCores()-1)
 #clusterExport(cl, 'n')
 #setDefaultCluster(cl = cl)
@@ -422,7 +422,7 @@ estimate_f <- function(data_x,n,p,q,k,t,gamma_res=TRUE,lambda_res=TRUE,sigma_u_d
 
   start_object <- starting_values_ML(data_x,sigma_u_diag=sigma_u_diag, sigma_u_ID=TRUE, sigma_eta_ID=TRUE)
   data_param_init <- start_object$data
-  data_param_names <- start_object$names  
+  data_param_names <- start_object$names
   matrices <- matrix_form(data=data_param_init,n=n,p=p,q=q,k=k,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag)
 
   lambda <- list(matrices$lambda)
@@ -446,23 +446,23 @@ estimate_f <- function(data_x,n,p,q,k,t,gamma_res=TRUE,lambda_res=TRUE,sigma_u_d
   list_param[[1]] <- data_param_init
   list_f[[1]] <- fsmooth1
   list_sigma_f[[1]] <- psmooth1
-  
+
   lower_gamma <- -0.8
   upper_gamma <- 0.8
   lower_lambda <- -Inf
   upper_lambda <- Inf
-  lower_sigma_u <- 0.0001
+  lower_sigma_u <- 0.01
   upper_sigma_u <- Inf
-  lower_sigma_e <- 0.0001
+  lower_sigma_e <- 0.01
   upper_sigma_e <- Inf
-  
+
   names <- c('gamma', 'lambda', 'sigma_u', 'sigma_e')
   lowers <- c('gamma'=lower_gamma, 'lambda'=lower_lambda, 'sigma_u'=lower_sigma_u, 'sigma_e'=lower_sigma_e )
   uppers <- c('gamma'=upper_gamma, 'lambda'=upper_lambda, 'sigma_u'=upper_sigma_u, 'sigma_e'=upper_sigma_e )
-  
+
   lower <- rep(NaN, length(data_param_init))
   upper <- rep(NaN, length(data_param_init))
-  
+
   for (index in names){
     lower <- replace(lower, data_param_names == index, lowers[index])
     upper <- replace(upper, data_param_names == index, uppers[index])
@@ -479,7 +479,7 @@ estimate_f <- function(data_x,n,p,q,k,t,gamma_res=TRUE,lambda_res=TRUE,sigma_u_d
                                         post_F=list_f[[(length(list_f))]],post_P=list_sigma_f[[(length(list_sigma_f))]],
                                         method = method, lower=lower, upper=upper, max_it=max_it, parallel = parallel,
                                         trace=trace, forward = forward, loginfo=loginfo)
-    
+
     list_param <- append(list_param,list(rslt_while_counter$params))
     list_f[[counter+1]] <- rslt_while_counter$post_F
     list_sigma_f <- append(list_sigma_f, list(rslt_while_counter$post_P))
@@ -558,11 +558,16 @@ starting_values_ML <- function(data_test, sigma_u_diag=TRUE, sigma_u_ID=TRUE, si
     F_X <- F_lags[(k+1):t,2:(k+1)]
 
     Gamma <- solve(t(F_X) %*% F_X) %*% t(F_X) %*% F_Y
+
+    #if (Gamma > 1)
+
     gammas <- rbind(gammas, t(Gamma))
     F_hat <- F_X %*% Gamma
 
     F_estimated <- rbind(F_estimated, t(F_hat))
   }
+
+  gammas[gammas > 0.9] <- 0.9
 
   eta_hat <- F_start[1:q,1:(t-k)] - F_estimated
   sigma_e_hat <- var(t(eta_hat))
