@@ -373,11 +373,12 @@ likelihood_wrapper <- function(data_param,data_x,n,p,q,k,t,gamma_res=TRUE,lambda
 
 }
 
-optim_wrapper <- function(data_param,optim_func,data_x,n,p,q,k,t,gamma_res=FALSE,lambda_res=TRUE,sigma_u_diag=TRUE,post_F,post_P,lower,upper,method = "L-BFGS-B", max_it, parallel=FALSE, trace=0){
+optim_wrapper <- function(data_param,optim_func,data_x,n,p,q,k,t,gamma_res=FALSE,lambda_res=TRUE,sigma_u_diag=TRUE,post_F,post_P,
+                          lower,upper,method = "L-BFGS-B", max_it, parallel=FALSE, trace=0, forward = FALSE, loginfo=FALSE){
 
   if (isTRUE(parallel)) {
     rslt=optimParallel(par=data_param, fn=optim_func,data_x=data_x,n=n,p=p,q=q,k=k,t=t,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag,post_F=post_F,post_P=post_P,
-               control=list(fnscale=-1, maxit=max_it, trace=trace),method = method, lower=lower, upper=upper)
+               control=list(fnscale=-1, maxit=max_it, trace=trace),method = method, lower=lower, upper=upper, parallel = list(forward = forward, loginfo=loginfo))
   } else{
     rslt=optim(par=data_param, fn=optim_func,data_x=data_x,n=n,p=p,q=q,k=k,t=t,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag,post_F=post_F,post_P=post_P,
                control=list(fnscale=-1,trace=trace, maxit=max_it),method = method, lower=lower, upper=upper)
@@ -416,7 +417,8 @@ optim_wrapper <- function(data_param,optim_func,data_x,n,p,q,k,t,gamma_res=FALSE
 #clusterExport(cl, 'n')
 #setDefaultCluster(cl = cl)
 
-estimate_f <- function(data_x,n,p,q,k,t,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=FALSE,it=4,method = "L-BFGS-B", parallel = FALSE, max_it = 50, trace=0){
+estimate_f <- function(data_x,n,p,q,k,t,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=FALSE,it=4,method = "L-BFGS-B", parallel = FALSE,
+                       max_it = 50, trace=0, forward = FALSE, loginfo = FALSE){
 
   start_object <- starting_values_ML(data_x,sigma_u_diag=sigma_u_diag, sigma_u_ID=TRUE, sigma_eta_ID=TRUE)
   data_param_init <- start_object$data
@@ -475,7 +477,8 @@ estimate_f <- function(data_x,n,p,q,k,t,gamma_res=TRUE,lambda_res=TRUE,sigma_u_d
     rslt_while_counter <- optim_wrapper(data_param=list_param[[(length(list_param))]],optim_func=likelihood_wrapper,data_x=data_x,n=n,
                                         p=p,q=q,k=k,t=t,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag,
                                         post_F=list_f[[(length(list_f))]],post_P=list_sigma_f[[(length(list_sigma_f))]],
-                                        method = method, lower=lower, upper=upper, max_it=max_it, parallel = parallel, trace=trace)
+                                        method = method, lower=lower, upper=upper, max_it=max_it, parallel = parallel,
+                                        trace=trace, forward = forward, loginfo=loginfo)
     
     list_param <- append(list_param,list(rslt_while_counter$params))
     list_f[[counter+1]] <- rslt_while_counter$post_F
