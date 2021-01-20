@@ -1,10 +1,11 @@
 check_speed <- function(parallel = TRUE, seed = 123, iterations_loop = 50, max_it_optim = 20, n=10, p=0, t=20, q=2, k=1){
-
-
+    library("optimParallel")
+    
+    
     if (isTRUE(parallel)) {
       cl <- makeCluster(detectCores()-1)
       setDefaultCluster(cl = cl)
-      clusterExport(cl, list('n', 'p', 'q', 't', 'k'))
+      clusterExport(cl, list('n', 'p', 'q', 't', 'k'), envir=environment())
     }
     
     set.seed(seed)
