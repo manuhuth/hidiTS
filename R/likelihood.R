@@ -420,7 +420,7 @@ optim_wrapper <- function(data_param,optim_func,data_x,n,p,q,k,t,gamma_res=FALSE
 estimate_f <- function(data_x,n,p,q,k,t,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=FALSE,it=4,method = "L-BFGS-B", parallel = FALSE,
                        max_it = 50, trace=0, forward = FALSE, loginfo = FALSE){
 
-  start_object <- starting_values_ML(data_x,sigma_u_diag=sigma_u_diag, sigma_u_ID=TRUE, sigma_eta_ID=TRUE)
+  start_object <- starting_values_ML(t=t,q=q,n=n,k=k,p=p,data_x,sigma_u_diag=sigma_u_diag, sigma_u_ID=TRUE, sigma_eta_ID=TRUE)
   data_param_init <- start_object$data
   data_param_names <- start_object$names
   matrices <- matrix_form(data=data_param_init,n=n,p=p,q=q,k=k,gamma_res=gamma_res,lambda_res=lambda_res,sigma_u_diag=sigma_u_diag)
@@ -521,14 +521,14 @@ estimate_f <- function(data_x,n,p,q,k,t,gamma_res=TRUE,lambda_res=TRUE,sigma_u_d
 }
 
 
-starting_values_ML <- function(data_test, sigma_u_diag=TRUE, sigma_u_ID=TRUE, sigma_eta_ID=TRUE) {
+starting_values_ML <- function(t,q,n,k,p,data_test, sigma_u_diag=TRUE, sigma_u_ID=TRUE, sigma_eta_ID=TRUE) {
   #input must be data list created with data_only = FALSE
 
-  t <- ncol(data_test$F)
-  q <- nrow(data_test$F)
-  n <- nrow(data_test$X)
-  k <- length(data_test$A)
-  p <- length(data_test$L) - 1
+ # t <- ncol(data_test$F)
+ # q <- nrow(data_test$F)
+ # n <- nrow(data_test$X)
+ # k <- length(data_test$A)
+ # p <- length(data_test$L) - 1
 
   pca_est <- pca_estimator(data_test$X, (p+1)*q)
   converted_pca_est <- convert_pca_estimator(pca_est, q, big_F = TRUE)
