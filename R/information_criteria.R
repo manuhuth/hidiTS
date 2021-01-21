@@ -1,10 +1,10 @@
-Information.criteria <- function(data,n,p,q,k,t, est.method){
+# executed with modified estimate_f and starting_values_ML
+Information.criteria <- function(data,n,p,q,k,t, est.method, kmax=8){
 
   data_x <- data$X
   if(est.method==1){
     r<-(p+1)*q
     g<-(n+t)/(n*t) *log(min(n,t))
-    kmax<-8
     PC.IC <- function(num){
       pca_est <- pca_estimator(X=data$X,number = num)
       rss<-sum(diag(t(data$X-(pca_est$Lambda%*%pca_est$F*n))%*%(data$X-(pca_est$Lambda%*%pca_est$F*n)))/(n*T))
@@ -19,48 +19,30 @@ Information.criteria <- function(data,n,p,q,k,t, est.method){
     BaiNg.PC<- unlist(output1[2,])
     num.bic<- match(min(BIC.PC),BIC.PC)
     num.BaiNg<-match(min(BaiNg.PC),BaiNg.PC)
-    delta_bic<- BIC.PC - min(BIC.PC)
-    delta_baing<- BaiNg.PC -min(BaiNg.PC)
 
-    return(data.frame("true_r"=r, "number_BIC"=num.bic, "number_BaiNg"=num.BaiNg, "bic"=delta_bic,"baing"=delta_baing))
+    return(data.frame("true_r"=r, "number_BIC"=num.bic, "number_BaiNg"=num.BaiNg))
 
   }else if(est.method==2){
 
     g<-(n+t)/(n*t) *log(min(n,t))
-    kmax<- 8
-    ll<-matrix(data = 0, ncol = kmax, nrow = (kmax+1))
-
-
-    for (p in 0:kmax) {
-
-      for(q in 1:kmax){
-
-        if((p+1)*q >n){
-          next
-        }
-
-        est <- estimate_f(data_x=data_test,n=n,p=p,q=q,k=k,t=t,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=TRUE,it=1,
+     calc_ll<- function(q,p){
+      
+      if(((p+1)*q) <= n ){
+         est <- estimate_f(data_x=data_test,n=n,p=p,q=q,k=k,t=t,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=TRUE,it=1,
                           method = "L-BFGS-B", parallel = FALSE, max_it = 3)
-
-
-        ll[(p+1),q]<- est$value
-
+        
+        return(est$value)
+        
+      }else{
+        return(NaN)
       }
     }
-
-    #calc_ll<- function(q,p,n){
-
-    # if(((p+1)*q) <= n ){
-    #  est <- estimate_f(data_x=data_test,n=n,p=p,q=q,k=k,t=t,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=TRUE,it=1,
-    #method = "L-BFGS-B", parallel = FALSE, max_it = 3)
-
-    # ll[(p+1),q]<- est$value
-    #return(est$value)
-
-    #  }else{
-
-    #  }
-    #}
+    qvalues<- 1:kmax
+    pvalues<-0:kmax
+    exp_grid<- expand.grid(qvalues, pvalues)
+    temp<- do.call(Vectorize(calc_ll), unname(exp_grid))
+    ll<- matrix(temp, ncol = kmax, byrow = TRUE )
+    ll[is.nan(ll)]<-0
 
     ll<- -ll
     bayesian<-c()
@@ -90,7 +72,7 @@ Information.criteria <- function(data,n,p,q,k,t, est.method){
     lags.bic<- match(min(BIC.ML.lag),BIC.ML.lag)
     lags.baing<- match(min(BaiNg.ML.lag),BaiNg.ML.lag)
 
-    return(data.frame("number_BIC"=num.bic,"number_BaiNg" =num.baing, "lags_BIC"=lags.bic, "lags_BaiNg"=lags.baing))
+    return(data.frame("true_number"=q, "true_lag"=p, "number_BIC"=num.bic,"number_BaiNg" =num.baing, "lags_BIC"=lags.bic, "lags_BaiNg"=lags.baing))
   }
 
 
