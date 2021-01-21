@@ -1,5 +1,4 @@
 exportPattern("^[[:alpha:]]+")
 import(MASS)
-import(expm)
 import(matrixcalc)
 import(optimParallel)
