@@ -31,7 +31,7 @@ Information.criteria <- function(data,n,p,q,k,t, est.method, kmax=8, ml_parallel
         if (isTRUE(ml_parallel)) {
           clusterExport(cl, list('n', 'p', 'q', 't', 'k'), envir=environment())
         }
-         est <- estimate_f(data_x=data_test,n=n,p=p,q=q,k=k,t=t,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=TRUE,it=1,
+         est <- estimate_f(data_x=data,n=n,p=p,q=q,k=k,t=t,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=TRUE,it=1,
                           method = "L-BFGS-B", parallel = ml_parallel, max_it = ml_maxit)
         
         return(est$value)
