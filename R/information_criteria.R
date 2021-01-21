@@ -1,5 +1,5 @@
 # executed with modified estimate_f and starting_values_ML
-Information.criteria <- function(data,n,p,q,k,t, est.method, kmax=8){
+Information.criteria <- function(data,n,p,q,k,t, est.method, kmax=8, ml_parallel = TRUE, ml_maxit = 5){
 
   data_x <- data$X
   if(est.method==1){
@@ -28,8 +28,11 @@ Information.criteria <- function(data,n,p,q,k,t, est.method, kmax=8){
      calc_ll<- function(q,p){
       
       if(((p+1)*q) <= n ){
+        if (isTRUE(ml_parallel)) {
+          clusterExport(cl, list('n', 'p', 'q', 't', 'k'), envir=environment())
+        }
          est <- estimate_f(data_x=data_test,n=n,p=p,q=q,k=k,t=t,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=TRUE,it=1,
-                          method = "L-BFGS-B", parallel = FALSE, max_it = 3)
+                          method = "L-BFGS-B", parallel = ml_parallel, max_it = ml_maxit)
         
         return(est$value)
         
