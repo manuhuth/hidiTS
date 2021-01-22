@@ -12,10 +12,10 @@ library(optimParallel)
 
 #-------------------Specify Iterations and other Parameters------------------------
 q_simulation <- c(3)            #vector of number of factors per data set
-T_simulation <- seq(10,20, 5)    #vector of number of periods per data set
-n_simulation <- seq(10,20, 5)    #vector of number of signals per data set
+T_simulation <- seq(10,20, 11)    #vector of number of periods per data set
+n_simulation <- seq(10,20, 11)    #vector of number of signals per data set
 
-number_iterations <- 100        #number of observations per combination of (q, T, n)
+number_iterations <- 1        #number of observations per combination of (q, T, n)
 
 #-------------------Playground Katrin---------------------------------------------
 
@@ -33,6 +33,10 @@ number_iterations <- 100        #number of observations per combination of (q, T
 
 
 
+
+
+
+#-------------------Change Nothing From Here Onward----------------------------------------------------------------------------------------------------------------------
 
 
 #-------------------Define Cluster-----------------------------------------------
@@ -54,16 +58,61 @@ for (q in q_simulation) {# start for q
 
         #compute Information Criteria
         ic_pca <- Information.criteria(data=data,n=n,p=0,q=q,k=1,t=T, est.method=1, kmax=6, ml_parallel = TRUE, ml_maxit = 5)
-        pca_optimal_bai <- ic_pca['number_BaiNg']
-        pca_optimal_bic <- ic_pca['number_BIC']
-        ml_optimal <- Information.criteria(data=data,n=n,p=0,q=q,k=1,t=T, est.method=2, kmax=6, ml_parallel = TRUE, ml_maxit = 5)
+        ic_ml <- Information.criteria(data=data,n=n,p=0,q=q,k=1,t=T, est.method=2, kmax=6, ml_parallel = TRUE, ml_maxit = 5)
 
         #get all optimal estimates
+        pca_bai_q <-ic_pca$number_BaiNg #Bai & NG optimal q pca
+        pca_bic_q <- ic_pca$number_BIC #Bayesian optimal q pca
+        ml_bai_q <- ic_ml$number_BaiNg #Bai & NG optimal q maximum likelihood
+        ml_bic_q <- ic_ml$number_BIC #Bayesian optimal q maximum likelihood
+
+        true_f <- data$F
+        true_lambda <- data$L[[1]]
+
+        pca_bic_f <- ic_pca$F_BIC
+        pca_bic_lambda <- ic_pca$Lambda_BIC
+        pca_bai_f <- ic_pca$F_BaiNg
+        pca_bai_lambda <- ic_pca$Lambda_BaiNg
+        pca_trueq_f <- ic_pca$F_true
+        pca_trueq_lambda <- ic_pca$Lambda_true
+
+        ml_bic_f <- ic_ml$F_BIC
+        ml_bic_lambda <- ic_ml$Lambda_BIC
+        ml_bai_f <- ic_ml$F_BaiNg
+        ml_bai_lambda <- ic_ml$Lambda_BaiNg
+        ml_trueq_f <- ic_ml$F_true
+        ml_trueq_lambda <- ic_ml$Lambda_true
 
         #transform all estimates
+        true_f_transformed <- convert_factors_dgp(data)$F
+        true_lambda_transformed <- convert_factors_dgp(data)$Lambda
+
+
+        #pca_bic_f_transformed <- convert_factors_ML(Lambda=pca_bic_lambda, factors=pca_bic_f, q=pca_bic_q)$F
+        #pca_bic_lambda_transformed <- convert_factors_ML(Lambda=pca_bic_lambda, factors=pca_bic_f, q=pca_bic_q)$Lambda
+        #pca_bai_f_transformed <- convert_factors_ML(Lambda=pca_bai_lambda, factors=pca_bai_f, q=pca_bai_q)$F
+        #pca_bai_lambda_transformed <- convert_factors_ML(Lambda=pca_bai_lambda, factors=pca_bai_f, q=pca_bai_q)$Lambda
+        pca_trueq_f_transformed <- convert_factors_ML(Lambda=pca_trueq_lambda, factors=pca_trueq_f, q=q)$F
+        pca_trueq_lambda_transformed <- convert_factors_ML(Lambda=pca_trueq_lambda, factors=pca_trueq_f, q=q)$Lambda
+
+        #ml_bic_f_transformed <- convert_factors_ML(Lambda=ml_bic_lambda, factors=ml_bic_f, q=ml_bic_q)$F
+        #ml_bic_lambda_transformed <- convert_factors_ML(Lambda=ml_bic_lambda, factors=ml_bic_f, q=ml_bic_q)$Lambda
+        #ml_bai_f_transformed <- convert_factors_ML(Lambda=ml_bai_lambda, factors=ml_bai_f, q=ml_bai_q)$F
+        #ml_bai_lambda_transformed <- convert_factors_ML(Lambda=ml_bai_lambda, factors=ml_bai_f, q=ml_bai_q)$Lambda
+        ml_trueq_f_transformed <- convert_factors_ML(Lambda=ml_trueq_lambda, factors=ml_trueq_f, q=q)$F
+        ml_trueq_lambda_transformed <- convert_factors_ML(Lambda=ml_trueq_lambda, factors=ml_trueq_f, q=q)$Lambda
 
         #compute MSE of f and f_hat for (true?) all estimates
+        for (index_trans in 1:q) {
+          mse_pca1 <- mean((true_f_transformed[index_trans,] - pca_trueq_f_transformed[index_trans,])^2)
+          mse_pca2 <- mean((true_f_transformed[index_trans,] + pca_trueq_f_transformed[index_trans,])^2)
 
+          mse_ml1 <- mean((true_f_transformed[index_trans,] - ml_trueq_f_transformed[index_trans,])^2)
+          mse_ml2 <- mean((true_f_transformed[index_trans,] + ml_trueq_f_transformed[index_trans,])^2)
+
+          if (mse_pca1 > mse_pca2 ){pca_trueq_f_transformed[index_trans,] <- - pca_trueq_f_transformed[index_trans,]}
+          if (mse_ml1 > mse_ml2 ){ml_trueq_f_transformed[index_trans,] <- - ml_trueq_f_transformed[index_trans,]}
+        }
         #compute explained variance for all estimates
 
         #compute X_hat
