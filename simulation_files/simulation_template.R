@@ -56,6 +56,8 @@ for (q in q_simulation) {# start for q
                                 low_F = 0.2, up_F = 0.9, burn_in = 20, data_only = FALSE, only_stationary = TRUE,
                                 adjust_diag = FALSE, geometric_F =TRUE, diag_F = TRUE, geometric_X =FALSE, geometric_Y =FALSE)
 
+        X_true <- data$X
+
         #compute Information Criteria
         ic_pca <- Information.criteria(data=data,n=n,p=0,q=q,k=1,t=T, est.method=1, kmax=6, ml_parallel = TRUE, ml_maxit = 5)
         ic_ml <- Information.criteria(data=data,n=n,p=0,q=q,k=1,t=T, est.method=2, kmax=6, ml_parallel = TRUE, ml_maxit = 5)
@@ -69,11 +71,11 @@ for (q in q_simulation) {# start for q
         true_f <- data$F
         true_lambda <- data$L[[1]]
 
-        pca_bic_f <- ic_pca$F_BIC
+        pca_bic_f <- ic_pca$F_BIC*n
         pca_bic_lambda <- ic_pca$Lambda_BIC
-        pca_bai_f <- ic_pca$F_BaiNg
+        pca_bai_f <- ic_pca$F_BaiNg*n
         pca_bai_lambda <- ic_pca$Lambda_BaiNg
-        pca_trueq_f <- ic_pca$F_true
+        pca_trueq_f <- ic_pca$F_true*n
         pca_trueq_lambda <- ic_pca$Lambda_true
 
         ml_bic_f <- ic_ml$F_BIC
@@ -103,28 +105,55 @@ for (q in q_simulation) {# start for q
         ml_trueq_lambda_transformed <- convert_factors_ML(Lambda=ml_trueq_lambda, factors=ml_trueq_f, q=q)$Lambda
 
         #compute MSE of f and f_hat for (true?) all estimates
+        mses <- c()
         for (index_trans in 1:q) {
           mse_pca1 <- mean((true_f_transformed[index_trans,] - pca_trueq_f_transformed[index_trans,])^2)
           mse_pca2 <- mean((true_f_transformed[index_trans,] + pca_trueq_f_transformed[index_trans,])^2)
+          mse_pca <- min(mse_pca1, mse_pca2)
 
           mse_ml1 <- mean((true_f_transformed[index_trans,] - ml_trueq_f_transformed[index_trans,])^2)
           mse_ml2 <- mean((true_f_transformed[index_trans,] + ml_trueq_f_transformed[index_trans,])^2)
-
-          if (mse_pca1 > mse_pca2 ){pca_trueq_f_transformed[index_trans,] <- - pca_trueq_f_transformed[index_trans,]}
-          if (mse_ml1 > mse_ml2 ){ml_trueq_f_transformed[index_trans,] <- - ml_trueq_f_transformed[index_trans,]}
+          mse_ml <- min(mse_ml1, mse_ml2)
+          mses <- c(mses, 'pca' =mse_pca, 'ml' = mse_ml )
         }
+
+
         #compute explained variance for all estimates
+        pca_bic_f_variance_explained <- pca_bic_lambda %*% var(t(pca_bic_f)) %*% t(pca_bic_lambda)
+        pca_bai_f_variance_explained <- pca_bai_lambda %*% var(t(pca_bai_f)) %*% t(pca_bai_lambda)
+        pca_trueq_f_variance_explained <- pca_trueq_lambda %*% var(t(pca_trueq_f)) %*% t(pca_trueq_lambda)
+
+        ml_bic_f_variance_explained <- ml_bic_lambda %*% var(t(ml_bic_f)) %*% t(ml_bic_lambda)
+        ml_bai_f_variance_explained <- ml_bai_lambda %*% var(t(ml_bai_f)) %*% t(ml_bai_lambda)
+        ml_trueq_f_variance_explained <- ml_trueq_lambda %*% var(t(ml_trueq_f)) %*% t(ml_trueq_lambda)
+
+        #variance_explained_true <- true_lambda %*% var(t(true_f)) %*% t(true_lambda)
 
         #compute X_hat
+        pca_bic_f_X_hat <- pca_bic_lambda %*% pca_bic_f
+        pca_bai_f_X_hat <- pca_bai_lambda %*% pca_bai_f
+        pca_trueq_f_X_hat <- pca_trueq_lambda %*% pca_trueq_f
+
+        ml_bic_f_X_hat <- ml_bic_lambda %*% ml_bic_f
+        ml_bai_f_X_hat <- ml_bai_lambda %*% ml_bai_f
+        ml_trueq_f_X_hat <- ml_trueq_lambda %*% ml_trueq_f
 
         #compute MSE of X and X_hat
+        pca_bic_mse_X <- mean((X_true - pca_bic_f_X_hat)^2)
+        pca_bai_mse_X <- mean((X_true - pca_bai_f_X_hat)^2)
+        pca_trueq_mse_X <- mean((X_true - pca_trueq_f_X_hat)^2)
 
-        #create vector to append
+        ml_bic_mse_X <- mean((X_true - ml_bic_f_X_hat)^2)
+        ml_bai_mse_X <- mean((X_true - ml_bai_f_X_hat)^2)
+        ml_trueq_mse_X <- mean((X_true - ml_trueq_f_X_hat)^2)
 
-        #append vector to huge matrix (or average over number_iterations and save rest in list)
+        #create vector to save over iterations
+
 
 
       }# end for iterations
+      #append vector to huge matrix (or average over number_iterations and save rest in list)
+
     }# end for n
   }# end for T
 }# end for q
