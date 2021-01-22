@@ -28,10 +28,11 @@ Information.criteria <- function(data,n,p,q,k,t, est.method, kmax=8, ml_parallel
     F_hat_BaiNg<-output1[3,num.BaiNg][[1]]
     Lambda_hat_BaiNg<- output1[4,num.BaiNg][[1]]
     
-    F_true<- data$F
-    Lambda_true<- data$L[[1]]
+    true_q<- nrow(data$F)
+    F_true<- output1[3,true_q][[1]]
+    Lambda_true<- output1[4,true_q][[1]]
 
-    return(list("true_r"=r, "number_BIC"=num.bic, "number_BaiNg"=num.BaiNg,"F_true"=F_true,
+    return(list("true_q"=true_q, "number_BIC"=num.bic, "number_BaiNg"=num.BaiNg,"F_true"=F_true,
                 "Lambda_true"=Lambda_true, "F_BIC"=F_hat_BIC, "Lambda_BIC"=Lambda_hat_BIC,
                       "F_BaiNg"=F_hat_BaiNg, "Lambda_BaiNg"=Lambda_hat_BaiNg))
 
@@ -89,21 +90,22 @@ Information.criteria <- function(data,n,p,q,k,t, est.method, kmax=8, ml_parallel
     #BaiNg.ML.lag<- unlist(output.lag[2,])
     #lags.bic<- match(min(BIC.ML.lag),BIC.ML.lag) -1 
     #lags.baing<- match(min(BaiNg.ML.lag),BaiNg.ML.lag)-1
-    
-    F_true<- data$F
-    Lambda_true<- data$L[[1]]
-    
+   
     save_F<-temp[2,]
     save_lambda<- temp[3,]
     #F_hat_BIC<- save_F[[kmax*lags.bic + num.bic]] # if p =!0
     #Lambda_hat_BaiNg<- save_lambda[[kmax*lags.baing+num.BaiNg]]
+    
+    true_q<- nrow(data$F)
+    F_true<- save_F[[true_q]]
+    Lambda_true<- save_lambda[[true_q]][[1]]
     
     F_hat_BIC<- save_F[[num.bic]]
     F_hat_BaiNg<- save_F[[num.BaiNg]]
     Lambda_hat_BIC<- save_lambda[[num.bic]][[1]]
     Lambda_hat_BaiNg<- save_lambda[[num.BaiNg]][[1]]
 
-    return(list("true_number"=q, "number_BIC"=num.bic,"number_BaiNg" =num.BaiNg,"F_true"=F_true,
+    return(list("true_number"=true_q, "number_BIC"=num.bic,"number_BaiNg" =num.BaiNg,"F_true"=F_true,
                       "Lambda_true"=Lambda_true,"F_BIC"=F_hat_BIC, "Lambda_BIC"=Lambda_hat_BIC,
                       "F_BaiNg"=F_hat_BaiNg, "Lambda_BaiNg"=Lambda_hat_BaiNg))
   }
