@@ -82,7 +82,7 @@ Information.criteria <- function(data,n,p,q,k,t, est.method, kmax=8, ml_parallel
     BIC.ML<-unlist(output[1,])
     BaiNg.ML<- unlist(output[2,])
     num.bic<-  match(min(BIC.ML),BIC.ML)
-    num.baing<- match(min(BaiNg.ML),BaiNg.ML)
+    num.BaiNg<- match(min(BaiNg.ML),BaiNg.ML)
 
      #output.lag<- sapply(0:kmax, ML.IC.Lags)
     #BIC.ML.lag<-unlist(output.lag[1,])
