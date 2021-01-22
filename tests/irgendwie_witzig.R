@@ -1,7 +1,7 @@
 #devtools::install(dependencies = TRUE)
 
 library(hidiTS)
-#library("optimParallel")
+library("optimParallel")
 rm(list = ls())
 
 
