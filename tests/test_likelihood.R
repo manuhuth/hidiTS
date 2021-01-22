@@ -16,7 +16,7 @@ data_test <- sim_data(p = n, T = t, dim_F= q, lags_F=k, lags_X=p, ar_F=1, ar_Y=1
                       only_stationary = TRUE, epsilon = 0.0002, max_it_station = 500, adjust_diag = FALSE,
                       geometric_F =TRUE, diag_F = TRUE, geometric_X =FALSE, geometric_Y =FALSE)
 
-data_param_init <- starting_values_ML(data_test,sigma_u_diag=TRUE, sigma_u_ID=TRUE, sigma_eta_ID=TRUE)
+data_param_init <- starting_values_ML(data_test=data_test,sigma_u_diag=TRUE, sigma_u_ID=TRUE, sigma_eta_ID=TRUE)
 
 matrices <- matrix_form(data=data_param_init,n=n,p=p,q=q,k=k,gamma_res=FALSE,lambda_res=TRUE,sigma_u_diag=TRUE)
 
