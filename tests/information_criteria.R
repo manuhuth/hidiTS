@@ -1,4 +1,4 @@
-devtools::install(dependencies = TRUE)
+#devtools::install(dependencies = TRUE)
 library(hidiTS)
 library(optimParallel)
 
