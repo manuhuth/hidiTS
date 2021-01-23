@@ -29,6 +29,23 @@ if (econometrician == 'Katrin'){
   func_vcv_mu <- function(n){#function must be named like this and return the desired vcv!
     return(diag(n))
   }
+  func_vcv_mu <- function(n){ # high variance
+    high_num<-4 #might set this higher?
+    return(4*diag(n))
+  }
+  func_vcv_mu <- function(n){ #after one fifth variables of x: sharp cutoff 
+    high_num<-4
+    cutoff_point<- round(n/5) #can be changed to p/4 etc.
+    output<-diag(c(rep(high_num, cutoff_point), rep( 1, n-cutoff_point)))
+    return(output)
+  }
+  func_vcv_mu <- function(n){ # smooth cutoff
+    high_num<-4 #might set this higher?
+    output<-diag(seq(high_num, 1, length.out= n))
+    return(output)
+  }
+                 
+  
 
 
 
