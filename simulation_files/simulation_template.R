@@ -13,10 +13,10 @@ library(optimParallel)
 #-------------------Specify Iterations and other Parameters------------------------
 rm(list = ls())
 q_simulation <- c(3)            #vector of number of factors per data set
-T_simulation <- seq(10,20, 11)    #vector of number of periods per data set
-n_simulation <- seq(10,15, 5)    #vector of number of signals per data set
+T_simulation <- seq(10,30, 10)    #vector of number of periods per data set
+n_simulation <- seq(10,50, 5)    #vector of number of signals per data set
 
-number_iterations <- 2        #number of observations per combination of (q, T, n)
+number_iterations <- 50       #number of observations per combination of (q, T, n)
 type_sigma_U <- 'diagonal'
 
 #-------------------Playground Katrin---------------------------------------------
