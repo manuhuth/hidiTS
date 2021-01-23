@@ -101,8 +101,8 @@ cl <- makeCluster(detectCores()-1)
 setDefaultCluster(cl = cl)
 
 #------------------Simulation Study----------------------------------------------
-#seed_index <- 1
-#simulated_data <- as.data.frame(c())
+seed_index <- 1
+simulated_data <- as.data.frame(c())
 start_time <- Sys.time()
 for (q in q_simulation) {# start for q
   for (T in T_simulation) {# start for T
@@ -122,6 +122,10 @@ for (q in q_simulation) {# start for q
 
         #compute Information Criteria
         ic_pca <- Information.criteria(data=data,n=n,p=0,q=q,k=1,t=T, est.method=1, kmax=5, ml_parallel = TRUE, ml_maxit = 5)
+        start_time_pca <- Sys.time()
+        placeholder <- pca_estimator(X_true, q)
+        end_time_pca <- Sys.time()
+        time_pca <- end_time_pca - start_time_pca
         #ic_ml <- Information.criteria(data=data,n=n,p=0,q=q,k=1,t=T, est.method=2, kmax=2, ml_parallel = TRUE, ml_maxit = 5)
 
         #get all optimal estimates
@@ -147,8 +151,12 @@ for (q in q_simulation) {# start for q
         pca_trueq_lambda <- ic_pca$Lambda_true
 
 
+        start_time_ml <- Sys.time()
         ml_true_q <- estimate_f(data_x=data,n=n,p=0,q=q,k=1,t=T,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=TRUE,it=1,
                                 method = "L-BFGS-B", parallel = TRUE, max_it = 5, forward = TRUE)
+        end_time_ml <- Sys.time()
+        time_ml <- end_time_ml - start_time_ml
+
         ml_trueq_f <- ml_true_q$f_final
         ml_trueq_lambda <- ml_true_q$lambda[[1]]
 
@@ -272,7 +280,7 @@ for (q in q_simulation) {# start for q
                                  'VE_pca_trueq' = pca_trueq_f_variance_explained, 'VE_ml_bic' =ml_bic_f_variance_explained, 'VE_ml_bai' = ml_bai_f_variance_explained,
                                  'VE_ml_trueq' = ml_trueq_f_variance_explained, 'mse_pca_bic_X_Xhat' = pca_bic_mse_X, 'mse_pca_bai_X_Xhat' = pca_bai_mse_X,
                                  'mse_pca_trueq_X_Xhat' = pca_trueq_mse_X, 'mse_ml_bic_X_Xhat' = ml_bic_mse_X, 'mse_ml_bai_X_Xhat' = ml_bai_mse_X,
-                                 'mse_ml_trueq_X_Xhat' = ml_trueq_mse_X )
+                                 'mse_ml_trueq_X_Xhat' = ml_trueq_mse_X, 'time_pca'=time_pca, 'time_ml'=time_ml)
 
         save_iterations <- rbind(save_iterations, save_for_iterations)
 
@@ -295,3 +303,4 @@ for (q in q_simulation) {# start for q
   }# end for T
 }# end for q
 colnames(simulated_data) <- colname
+
