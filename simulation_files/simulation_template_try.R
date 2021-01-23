@@ -15,56 +15,20 @@ rm(list = ls())
 econometrician <- 'Manu' #either 'Katrin', 'Marc' or 'Manu'
 
 q_simulation <- c(3)            #vector of number of factors per data set
-T_simulation <- seq(10,15, 5)    #vector of number of periods per data set
-n_simulation <- seq(10,15, 5)    #vector of number of signals per data set
+T_simulation <- c(35)#seq(10,50, 5)    #vector of number of periods per data set
+n_simulation <- c(55)#seq(10,60, 5)    #vector of number of signals per data set
 
-number_iterations <- 50       #number of observations per combination of (q, T, n)
+number_iterations <- 20       #number of observations per combination of (q, T, n)
 type_sigma_U <- 'diagonal'
 
 
 #-------------------Playground Katrin---------------------------------------------
 if (econometrician == 'Katrin'){
   print('Roses are red, model the shock, this code is gonna rock!')
-  
-  #1
+
   func_vcv_mu <- function(n){#function must be named like this and return the desired vcv!
     return(diag(n))
   }
-  #2
-  func_vcv_mu <- function(n){ # high variance
-    high_num<-4 #might set this higher?
-    return(4*diag(n))
-  }
-  #3
-  func_vcv_mu <- function(n){ #after one fifth variables of x: sharp cutoff 
-    high_num<-4
-    cutoff_point<- round(n/5) #can be changed to p/4 etc.
-    output<-diag(c(rep(high_num, cutoff_point), rep( 1, n-cutoff_point)))
-    return(output)
-  }
-  #4
-  func_vcv_mu <- function(n){ # smooth cutoff
-    high_num<-4 #might set this higher?
-    output<-diag(seq(high_num, 1, length.out= n))
-    return(output)
-  }
-  #5
-  fun_vcv_mu<- function(n){ # variance=1 on diag and small number 0.001 on off diagonal
-    variance=1
-    sigma= diag(x=variance, nrow=n, ncol = n)
-    
-    for (row in seq(1,n)) {
-    for (col in seq(1,n)) {
-      if(row==col){
-        sigma[row,col]=variance
-      }else{
-        sigma[row,col]=0.001
-      }
-    }
-  }
-  return(sigma)
- }               
-  
 
 
 
@@ -104,8 +68,8 @@ cl <- makeCluster(detectCores()-1)
 setDefaultCluster(cl = cl)
 
 #------------------Simulation Study----------------------------------------------
-seed_index <- 1
-simulated_data <- as.data.frame(c())
+#seed_index <- 1
+#simulated_data <- as.data.frame(c())
 start_time <- Sys.time()
 for (q in q_simulation) {# start for q
   for (T in T_simulation) {# start for T
@@ -142,11 +106,11 @@ for (q in q_simulation) {# start for q
         true_f <- data$F
         true_lambda <- data$L[[1]]
 
-        pca_bic_f <- ic_pca$F_BIC*n
+        pca_bic_f <- ic_pca$F_BIC
         pca_bic_lambda <- ic_pca$Lambda_BIC
-        pca_bai_f <- ic_pca$F_BaiNg*n
+        pca_bai_f <- ic_pca$F_BaiNg
         pca_bai_lambda <- ic_pca$Lambda_BaiNg
-        pca_trueq_f <- ic_pca$F_true*n
+        pca_trueq_f <- ic_pca$F_true
         pca_trueq_lambda <- ic_pca$Lambda_true
 
 
@@ -271,7 +235,7 @@ for (q in q_simulation) {# start for q
 
         #create vector to save over iterations
         save_for_iterations <- c('pca_bai_right'=pca_bai_right,'pca_bic_right'=pca_bic_right,'ml_bai_right'=ml_bai_right,'ml_bic_right'=ml_bic_right,
-                                 'bic_equal_bai' = bai_equals_bic, mses, 'VE_pca_bic' =pca_bic_f_variance_explained, 'VE_pca_bic' = pca_bai_f_variance_explained,
+                                 'bic_equal_bai' = bai_equals_bic, mses, 'VE_pca_bic' =pca_bic_f_variance_explained, 'VE_pca_bai' = pca_bai_f_variance_explained,
                                  'VE_pca_trueq' = pca_trueq_f_variance_explained, 'VE_ml_bic' =ml_bic_f_variance_explained, 'VE_ml_bai' = ml_bai_f_variance_explained,
                                  'VE_ml_trueq' = ml_trueq_f_variance_explained, 'mse_pca_bic_X_Xhat' = pca_bic_mse_X, 'mse_pca_bai_X_Xhat' = pca_bai_mse_X,
                                  'mse_pca_trueq_X_Xhat' = pca_trueq_mse_X, 'mse_ml_bic_X_Xhat' = ml_bic_mse_X, 'mse_ml_bai_X_Xhat' = ml_bai_mse_X,
