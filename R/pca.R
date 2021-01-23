@@ -1,7 +1,7 @@
 pca_estimator <- function(X, number) {
   sigma_X <- var(t(X))
-  Lambda_hat <- eigen(sigma_X)$vectors[,1:number]
-  F_hat <-  t(Lambda_hat) %*% X * 1/ncol(X)
+  Lambda_hat <- eigen(sigma_X)$vectors[,1:number] *  (nrow(X)^0.5)
+  F_hat <-  t(Lambda_hat) %*% X * 1/nrow(X)
 
   output <- list('F' = F_hat, 'Lambda' = matrix(Lambda_hat, nrow(X), number))
   return(output)

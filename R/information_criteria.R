@@ -8,7 +8,7 @@ Information.criteria <- function(data,n,p,q,k,t, est.method, kmax=8, ml_parallel
     g<-(n+t)/(n*t) *log(min(n,t))
     PC.IC <- function(num){
       pca_est <- pca_estimator(X=data$X,number = num)
-      rss<-sum(diag(t(data$X-(pca_est$Lambda%*%pca_est$F*n))%*%(data$X-(pca_est$Lambda%*%pca_est$F*n)))/(n*T))
+      rss<-sum(diag(t(data$X-(pca_est$Lambda%*%pca_est$F))%*%(data$X-(pca_est$Lambda%*%pca_est$F)))/(n*T))
       bayesian <- log(n)*num + n*log(rss)
       baing <- g*num + log(rss)
       return(list(bayesian, baing, pca_est$F, pca_est$Lambda ))
@@ -18,16 +18,16 @@ Information.criteria <- function(data,n,p,q,k,t, est.method, kmax=8, ml_parallel
     output1<- sapply(1:kmax, PC.IC)
     BIC.PC<-unlist(output1[1,])
     BaiNg.PC<- unlist(output1[2,])
-    
+
     num.bic<- match(min(BIC.PC),BIC.PC)
     num.BaiNg<-match(min(BaiNg.PC),BaiNg.PC)
-    
+
     F_hat_BIC<- output1[3,num.bic][[1]]
     Lambda_hat_BIC<-output1[4,num.bic][[1]]
-    
+
     F_hat_BaiNg<-output1[3,num.BaiNg][[1]]
     Lambda_hat_BaiNg<- output1[4,num.BaiNg][[1]]
-    
+
     true_q<- nrow(data$F)
     F_true<- output1[3,true_q][[1]]
     Lambda_true<- output1[4,true_q][[1]]
@@ -40,16 +40,16 @@ Information.criteria <- function(data,n,p,q,k,t, est.method, kmax=8, ml_parallel
 
     g<-(n+t)/(n*t) *log(min(n,t))
      calc_ll<- function(q,p){
-      
+
       if(((p+1)*q) <= n ){
         if (isTRUE(ml_parallel)) {
           clusterExport(cl, list('n', 'p', 'q', 't', 'k'), envir=environment())
         }
          est <- estimate_f(data_x=data,n=n,p=p,q=q,k=k,t=t,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=TRUE,it=1,
                           method = "L-BFGS-B", parallel = ml_parallel, max_it = ml_maxit)
-        
+
         return(list(est$value, est$F_final, est$lambda))
-        
+
       }else{
         return(NaN)
       }
@@ -58,7 +58,7 @@ Information.criteria <- function(data,n,p,q,k,t, est.method, kmax=8, ml_parallel
     pvalues<-0
     exp_grid<- expand.grid(qvalues, pvalues)
     temp<- do.call(Vectorize(calc_ll), unname(exp_grid))
-    
+
     save_ll<-temp[1,]
     ll<- matrix(unlist(save_ll), ncol=kmax,nrow=1, byrow = TRUE )
     ll[is.nan(ll)]<-0
@@ -88,18 +88,18 @@ Information.criteria <- function(data,n,p,q,k,t, est.method, kmax=8, ml_parallel
      #output.lag<- sapply(0:kmax, ML.IC.Lags)
     #BIC.ML.lag<-unlist(output.lag[1,])
     #BaiNg.ML.lag<- unlist(output.lag[2,])
-    #lags.bic<- match(min(BIC.ML.lag),BIC.ML.lag) -1 
+    #lags.bic<- match(min(BIC.ML.lag),BIC.ML.lag) -1
     #lags.baing<- match(min(BaiNg.ML.lag),BaiNg.ML.lag)-1
-   
+
     save_F<-temp[2,]
     save_lambda<- temp[3,]
     #F_hat_BIC<- save_F[[kmax*lags.bic + num.bic]] # if p =!0
     #Lambda_hat_BaiNg<- save_lambda[[kmax*lags.baing+num.BaiNg]]
-    
+
     true_q<- nrow(data$F)
     F_true<- save_F[[true_q]]
     Lambda_true<- save_lambda[[true_q]][[1]]
-    
+
     F_hat_BIC<- save_F[[num.bic]]
     F_hat_BaiNg<- save_F[[num.BaiNg]]
     Lambda_hat_BIC<- save_lambda[[num.bic]][[1]]
