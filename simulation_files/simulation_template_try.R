@@ -25,26 +25,45 @@ type_sigma_U <- 'diagonal'
 #-------------------Playground Katrin---------------------------------------------
 if (econometrician == 'Katrin'){
   print('Roses are red, model the shock, this code is gonna rock!')
-
+  
+  #1
   func_vcv_mu <- function(n){#function must be named like this and return the desired vcv!
     return(diag(n))
   }
+  #2
   func_vcv_mu <- function(n){ # high variance
     high_num<-4 #might set this higher?
     return(4*diag(n))
   }
+  #3
   func_vcv_mu <- function(n){ #after one fifth variables of x: sharp cutoff 
     high_num<-4
     cutoff_point<- round(n/5) #can be changed to p/4 etc.
     output<-diag(c(rep(high_num, cutoff_point), rep( 1, n-cutoff_point)))
     return(output)
   }
+  #4
   func_vcv_mu <- function(n){ # smooth cutoff
     high_num<-4 #might set this higher?
     output<-diag(seq(high_num, 1, length.out= n))
     return(output)
   }
-                 
+  #5
+  fun_vcv_mu<- function(n){ # variance=1 on diag and small number 0.001 on off diagonal
+    variance=1
+    sigma= diag(x=variance, nrow=n, ncol = n)
+    
+    for (row in seq(1,n)) {
+    for (col in seq(1,n)) {
+      if(row==col){
+        sigma[row,col]=variance
+      }else{
+        sigma[row,col]=0.001
+      }
+    }
+  }
+  return(sigma)
+ }               
   
 
 
