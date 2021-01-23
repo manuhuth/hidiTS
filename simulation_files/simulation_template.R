@@ -182,7 +182,7 @@ for (q in q_simulation) {# start for q
 
       #append vector to huge matrix (or average over number_iterations and save rest in list)
       save_for_simulated_data <- c(colMeans(save_iterations), 'n' = n, 'T'=T, 'q'=q, 'p'=0, 'k'=1, 'number of iterations per setting' = number_iterations,
-                                    'maxit' = 5, 'max_factors_IC' = 6, 'DGP' = 'stationary', 'sigma_u' = type_sigma_U, 'seed', seed_index)
+                                    'maxit' = 5, 'max_factors_IC' = 6, 'DGP' = 'stationary', 'sigma_u' = type_sigma_U, 'seed' = seed_index)
       colname <- names(save_for_simulated_data)
       simulated_data <- rbind(simulated_data, save_for_simulated_data)
 
