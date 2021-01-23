@@ -13,10 +13,10 @@ library(optimParallel)
 #-------------------Specify Iterations and other Parameters------------------------
 rm(list = ls())
 q_simulation <- c(3)            #vector of number of factors per data set
-T_simulation <- seq(10,30, 10)    #vector of number of periods per data set
-n_simulation <- seq(10,50, 10)    #vector of number of signals per data set
+T_simulation <- seq(10,11, 2)    #vector of number of periods per data set
+n_simulation <- seq(10,12, 2)    #vector of number of signals per data set
 
-number_iterations <- 50       #number of observations per combination of (q, T, n)
+number_iterations <- 2       #number of observations per combination of (q, T, n)
 type_sigma_U <- 'diagonal'
 
 #-------------------Playground Katrin---------------------------------------------
@@ -181,7 +181,7 @@ for (q in q_simulation) {# start for q
       }# end for iterations
 
       #append vector to huge matrix (or average over number_iterations and save rest in list)
-      save_for_simulated_data <- c(colMeans(save_iterations), 'n' = n, 'T'=T, 'q'=q, 'p'=0, 'k'=1, 'number of iterations per setting' = number_iterations,
+      save_for_simulated_data <- data.frame(t(colMeans(save_iterations)), 'n' = n, 'T'=T, 'q'=q, 'p'=0, 'k'=1, 'number of iterations per setting' = number_iterations,
                                     'maxit' = 5, 'max_factors_IC' = 6, 'DGP' = 'stationary', 'sigma_u' = type_sigma_U, 'seed' = seed_index)
       colname <- names(save_for_simulated_data)
       simulated_data <- rbind(simulated_data, save_for_simulated_data)
