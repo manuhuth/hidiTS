@@ -12,32 +12,54 @@ library(optimParallel)
 
 #-------------------Specify Iterations and other Parameters------------------------
 rm(list = ls())
-q_simulation <- c(3)            #vector of number of factors per data set
-T_simulation <- seq(10,12, 2)    #vector of number of periods per data set
-n_simulation <- seq(10,11, 2)    #vector of number of signals per data set
+econometrician <- 'Manu' #either 'Katrin', 'Marc' or 'Manu'
 
-number_iterations <- 2       #number of observations per combination of (q, T, n)
+q_simulation <- c(3)            #vector of number of factors per data set
+T_simulation <- seq(10,15, 5)    #vector of number of periods per data set
+n_simulation <- seq(10,15, 5)    #vector of number of signals per data set
+
+number_iterations <- 50       #number of observations per combination of (q, T, n)
 type_sigma_U <- 'diagonal'
 
+
 #-------------------Playground Katrin---------------------------------------------
+if (econometrician == 'Katrin'){
+  print('Roses are red, model the shock, this code is gonna rock!')
+
+  func_vcv_mu <- function(n){#function must be named like this and return the desired vcv!
+    return(diag(n))
+  }
 
 
 
 
 
+}
 #-------------------Playground Marc-----------------------------------------------
+if (econometrician == 'Marc'){
+  print('May the kernels and bug fixes be with you! #Bugsafari')
+
+  func_vcv_mu <- function(n){#function must be named like this and return the desired vcv!
+    return(diag(n))
+  }
 
 
 
 
 
+}
 #-------------------Playground Manu----------------------------------------------
+if (econometrician == 'Manu'){
+  func_vcv_mu <- function(n){
+    return(diag(n))
+  }
 
 
 
 
 
 
+}
 #-------------------Change Nothing From Here Onward----------------------------------------------------------------------------------------------------------------------
 
 
@@ -57,9 +79,10 @@ for (q in q_simulation) {# start for q
         tryCatch({
         set.seed(seed_index)
         seed_index = seed_index + 1
+        vcv_mu <- func_vcv_mu(n)
         clusterExport(cl, list('n', 'q', 'T'))
         data <- sim_data(p = n, T = T, dim_F= q, lags_F=1, lags_X=0, ar_F=1, ar_Y=1, low_X = -3^0.5, up_X = 3^0.5,
-                                low_F = 0.2, up_F = 0.9, burn_in = 20, data_only = FALSE, only_stationary = TRUE,
+                                low_F = 0.2, up_F = 0.9, burn_in = 20, data_only = FALSE, only_stationary = TRUE, vcv_mu = vcv_mu,
                                 adjust_diag = FALSE, geometric_F =TRUE, diag_F = TRUE, geometric_X =FALSE, geometric_Y =FALSE)
 
         X_true <- data$X
@@ -78,6 +101,7 @@ for (q in q_simulation) {# start for q
         pca_bic_right = pca_bic_q == q
         ml_bai_right = ml_bai_q == q
         ml_bic_right = ml_bic_q == q
+        bai_equals_bic <- pca_bai_q == pca_bic_q
 
         true_f <- data$F
         true_lambda <- data$L[[1]]
@@ -181,13 +205,13 @@ for (q in q_simulation) {# start for q
         var_X <- var(t(X_true))
         var_X_diag <- diag(var_X)
 
-        pca_bic_f_variance_explained <- mean(diag(pca_bic_lambda %*% var(t(pca_bic_f)) %*% t(pca_bic_lambda)) / var_X_diag)
-        pca_bai_f_variance_explained <- mean(diag(pca_bai_lambda %*% var(t(pca_bai_f)) %*% t(pca_bai_lambda)) / var_X_diag)
-        pca_trueq_f_variance_explained <- mean(diag(pca_trueq_lambda %*% var(t(pca_trueq_f)) %*% t(pca_trueq_lambda)) / var_X_diag)
+        pca_bic_f_variance_explained <- mean(diag(pca_bic_lambda %*% var(t(matrix(pca_bic_f,pca_bic_q ,T))) %*% t(pca_bic_lambda)) / var_X_diag)
+        pca_bai_f_variance_explained <- mean(diag(pca_bai_lambda %*% var(t(matrix(pca_bai_f,pca_bai_q ,T))) %*% t(pca_bai_lambda)) / var_X_diag)
+        pca_trueq_f_variance_explained <- mean(diag(pca_trueq_lambda %*% var(t(matrix(pca_trueq_f, q ,T))) %*% t(pca_trueq_lambda)) / var_X_diag)
 
-        ml_bic_f_variance_explained <- mean(diag(ml_bic_lambda %*% var(t(ml_bic_f)) %*% t(ml_bic_lambda)) / var_X_diag)
-        ml_bai_f_variance_explained <- mean(diag(ml_bai_lambda %*% var(t(ml_bai_f)) %*% t(ml_bai_lambda)) / var_X_diag)
-        ml_trueq_f_variance_explained <- mean(diag(ml_trueq_lambda %*% var(t(ml_trueq_f)) %*% t(ml_trueq_lambda)) / var_X_diag)
+        ml_bic_f_variance_explained <- mean(diag(ml_bic_lambda %*% var(t(matrix(ml_bic_f,pca_bic_q,T))) %*% t(ml_bic_lambda)) / var_X_diag)
+        ml_bai_f_variance_explained <- mean(diag(ml_bai_lambda %*% var(t(matrix(ml_bai_f,pca_bai_q,T))) %*% t(ml_bai_lambda)) / var_X_diag)
+        ml_trueq_f_variance_explained <- mean(diag(ml_trueq_lambda %*% var(t(matrix(ml_trueq_f, q ,T))) %*% t(ml_trueq_lambda)) / var_X_diag)
 
         #variance_explained_true <- true_lambda %*% var(t(true_f)) %*% t(true_lambda)
 
@@ -211,9 +235,9 @@ for (q in q_simulation) {# start for q
 
         #create vector to save over iterations
         save_for_iterations <- c('pca_bai_right'=pca_bai_right,'pca_bic_right'=pca_bic_right,'ml_bai_right'=ml_bai_right,'ml_bic_right'=ml_bic_right,
-                                 mses, 'VE_pca_bic' =pca_bic_f_variance_explained, 'VE_pca_bic' = pca_bai_f_variance_explained,
-                                 'VE_pca_trueq' = pca_trueq_f_variance_explained, 'VE_ml_bic' =pca_bic_f_variance_explained, 'VE_ml_bai' = pca_bai_f_variance_explained,
-                                 'VE_ml_trueq' = pca_trueq_f_variance_explained, 'mse_pca_bic_X_Xhat' = pca_bic_mse_X, 'mse_pca_bai_X_Xhat' = pca_bai_mse_X,
+                                 'bic_equal_bai' = bai_equals_bic, mses, 'VE_pca_bic' =pca_bic_f_variance_explained, 'VE_pca_bic' = pca_bai_f_variance_explained,
+                                 'VE_pca_trueq' = pca_trueq_f_variance_explained, 'VE_ml_bic' =ml_bic_f_variance_explained, 'VE_ml_bai' = ml_bai_f_variance_explained,
+                                 'VE_ml_trueq' = ml_trueq_f_variance_explained, 'mse_pca_bic_X_Xhat' = pca_bic_mse_X, 'mse_pca_bai_X_Xhat' = pca_bai_mse_X,
                                  'mse_pca_trueq_X_Xhat' = pca_trueq_mse_X, 'mse_ml_bic_X_Xhat' = ml_bic_mse_X, 'mse_ml_bai_X_Xhat' = ml_bai_mse_X,
                                  'mse_ml_trueq_X_Xhat' = ml_trueq_mse_X )
 
@@ -230,7 +254,7 @@ for (q in q_simulation) {# start for q
 
       #append vector to huge matrix (or average over number_iterations and save rest in list)
       save_for_simulated_data <- data.frame(t(colMeans(save_iterations)), 'n' = n, 'T'=T, 'q'=q, 'p'=0, 'k'=1, 'number of iterations per setting' = number_iterations,
-                                    'maxit' = 5, 'max_factors_IC' = 6, 'DGP' = 'stationary', 'sigma_u' = type_sigma_U, 'seed' = seed_index)
+                                    'maxit' = 5, 'max_factors_IC' = 6, 'DGP' = 'stationary', 'sigma_u' = type_sigma_U)
       colname <- names(save_for_simulated_data)
       simulated_data <- rbind(simulated_data, save_for_simulated_data)
 
