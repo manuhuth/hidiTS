@@ -14,7 +14,7 @@ library(optimParallel)
 rm(list = ls())
 q_simulation <- c(3)            #vector of number of factors per data set
 T_simulation <- seq(10,30, 10)    #vector of number of periods per data set
-n_simulation <- seq(10,50, 5)    #vector of number of signals per data set
+n_simulation <- seq(10,50, 10)    #vector of number of signals per data set
 
 number_iterations <- 50       #number of observations per combination of (q, T, n)
 type_sigma_U <- 'diagonal'
@@ -54,6 +54,7 @@ for (q in q_simulation) {# start for q
     for (n in n_simulation) {# start for n
       save_iterations <- c()
       for (iterations in 1:number_iterations){ # start for iterations
+        tryCatch({
         set.seed(seed_index)
         seed_index = seed_index + 1
         clusterExport(cl, list('n', 'q', 'T'))
@@ -173,11 +174,15 @@ for (q in q_simulation) {# start for q
         now_time <- Sys.time()
         time <- now_time - start_time
         print(paste('q=',q,'; n=',n, '; T=',T, '; iteration=',iterations, '; time since start = ',round(time, 4),units(time), sep=''))
+
+        }, error=function(e){cat("ERROR :",conditionMessage(e), "\n", 'seed=', seed_index ,'q=',q,'; n=',n, '; T=',T)})
+
+
       }# end for iterations
 
       #append vector to huge matrix (or average over number_iterations and save rest in list)
       save_for_simulated_data <- c(colMeans(save_iterations), 'n' = n, 'T'=T, 'q'=q, 'p'=0, 'k'=1, 'number of iterations per setting' = number_iterations,
-                                    'maxit' = 5, 'max_factors_IC' = 6, 'DGP' = 'stationary', 'sigma_u' = type_sigma_U)
+                                    'maxit' = 5, 'max_factors_IC' = 6, 'DGP' = 'stationary', 'sigma_u' = type_sigma_U, 'seed', seed_index)
       colname <- names(save_for_simulated_data)
       simulated_data <- rbind(simulated_data, save_for_simulated_data)
 
