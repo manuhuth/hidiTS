@@ -36,7 +36,7 @@ convert_factors_dgp <- function(data) {
   L_unc <- L %*% solve(D %*% t(theta))
   QR <- qr(t(L_unc[1:qp1, 1:qp1]))
   L_qr <- qr.Q(QR)
-  new_F <- L_qr%*%F_unc
+  new_F <- t(L_qr)%*%F_unc
   new_L <- L_unc %*% L_qr
 
   if (lags == 0) {
@@ -87,7 +87,7 @@ convert_factors_ML <- function(Lambda, factors, q) {
     L_qr <- qr.Q(QR)
 
 
-    new_F <- L_qr%*%F_unc
+    new_F <- t(L_qr)%*%F_unc
     new_L <- L_unc %*% L_qr
 
     if (lags == 0) {
