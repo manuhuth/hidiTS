@@ -15,8 +15,8 @@ rm(list = ls())
 econometrician <- 'Manu' #either 'Katrin', 'Marc' or 'Manu'
 
 q_simulation <- c(3)            #vector of number of factors per data set
-T_simulation <- seq(10,40, 5)  #vector of number of periods per data set
-n_simulation <- c(5,10, 15, seq(20, 120, 20))
+T_simulation <- seq(10, 30, 5)  #vector of number of periods per data set
+n_simulation <- c(10, 15, seq(20, 80, 20))#seq(10,60, 5)    #vector of number of signals per data set
 
 number_iterations <- 20       #number of observations per combination of (q, T, n)
 type_sigma_U <- 'diagonal'
@@ -135,7 +135,7 @@ for (q in q_simulation) {# start for q
           ml_bic_lambda <- ml_trueq_lambda
         }
         if ((q != pca_bai_q) & (q== pca_bic_q)){
-          ml_bai <- ml_true_q <- estimate_f(data_x=data,n=n,p=0,q=pca_bai_q,k=1,t=T,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=TRUE,it=1,
+          ml_bai <- estimate_f(data_x=data,n=n,p=0,q=pca_bai_q,k=1,t=T,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=TRUE,it=1,
                                                       method = "L-BFGS-B", parallel = TRUE, max_it = 5, forward = TRUE)
           ml_bai_f <- ml_bai$f_final
           ml_bai_lambda <- ml_bai$lambda[[1]]
@@ -144,7 +144,7 @@ for (q in q_simulation) {# start for q
         }
 
         if ((q == pca_bai_q) & (q != pca_bic_q)){
-          ml_bic <- ml_true_q <- estimate_f(data_x=data,n=n,p=0,q=pca_bic_q,k=1,t=T,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=TRUE,it=1,
+          ml_bic <- estimate_f(data_x=data,n=n,p=0,q=pca_bic_q,k=1,t=T,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=TRUE,it=1,
                                             method = "L-BFGS-B", parallel = TRUE, max_it = 5, forward = TRUE)
           ml_bic_f <- ml_bic$f_final
           ml_bic_lambda <- ml_bic$lambda[[1]]
@@ -154,7 +154,7 @@ for (q in q_simulation) {# start for q
         }
 
         if ((q != pca_bai_q) & (q != pca_bic_q) &  (pca_bai_q ==  pca_bic_q)){
-          ml_bic <- ml_true_q <- estimate_f(data_x=data,n=n,p=0,q=pca_bic_q,k=1,t=T,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=TRUE,it=1,
+          ml_bic <- estimate_f(data_x=data,n=n,p=0,q=pca_bic_q,k=1,t=T,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=TRUE,it=1,
                                             method = "L-BFGS-B", parallel = TRUE, max_it = 5, forward = TRUE)
           ml_bic_f <- ml_bic$f_final
           ml_bic_lambda <- ml_bic$lambda[[1]]
@@ -164,7 +164,7 @@ for (q in q_simulation) {# start for q
         }
 
         if ((q != pca_bai_q) & (q != pca_bic_q) &  (pca_bai_q !=  pca_bic_q)){
-          ml_bic <- ml_true_q <- estimate_f(data_x=data,n=n,p=0,q=pca_bic_q,k=1,t=T,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=TRUE,it=1,
+          ml_bic <- estimate_f(data_x=data,n=n,p=0,q=pca_bic_q,k=1,t=T,gamma_res=TRUE,lambda_res=TRUE,sigma_u_diag=TRUE,it=1,
                                             method = "L-BFGS-B", parallel = TRUE, max_it = 5, forward = TRUE)
           ml_bic_f <- ml_bic$f_final
           ml_bic_lambda <- ml_bic$lambda[[1]]
