@@ -62,6 +62,22 @@ if (econometrician == 'Katrin'){
 #    }
 #    return(sigma)
 #  }
+    #6
+  #func_vcv_mu<- function(n){ # variance=1 on diag and small number 0.001 on off diagonal
+  #  variance=1
+  #  sigma= diag(x=variance, nrow=n, ncol = n)
+  
+  #   for (row in seq(1,n)) {
+  #      for (col in seq(1,n)) {
+  #        if(row==col){
+  #          sigma[row,col]=variance
+  #        }else{
+  #          sigma[row,col]=0.5
+  #        }
+  #      }
+  #    }
+  #    return(sigma)
+  #  }
 
 
 
