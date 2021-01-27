@@ -70,7 +70,7 @@ Information.criteria <- function(data,n,p,q,k,t, est.method, kmax=8, ml_parallel
     Bai.Ng.lag<-c()
 
     ML.IC <-function(num){
-      bayesian[num] <- log(n)*num - 2*max(ll[,num])
+      bayesian[num] <- log(T)*number_of_param(n=n,p=p,q=q,k=num,gamma_res=TRUE, lambda_res=TRUE, sigma_u_diag=TRUE) - 2*max(ll[,num])
       Bai.Ng[num]<- g*num -2*max(ll[,num])
       return(data.frame(bayesian[num], Bai.Ng[num]))
     }
