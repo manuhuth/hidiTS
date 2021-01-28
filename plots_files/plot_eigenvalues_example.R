@@ -37,14 +37,12 @@ data_smooth <- sim_data(p = n, T = T, dim_F= q, lags_F=1, lags_X=0, ar_F=1, ar_Y
 #eigen(var(t(data_smooth$X)))$values
 
 df <- data.frame(cbind(eigen(var(t(data$X)))$values,eigen(var(t(data_smooth$X)))$values, 1:length(eigen(var(t(data$X)))$values)))
-colnames(df) <- c('Cut','Smooth', 'Eigenvalue')
+colnames(df) <- c('High Absolute Lambda','Low Absolute Lambda', 'Eigenvalue')
 
 df_long <- melt(df, id='Eigenvalue')
-colnames(df_long) <- c('Eigenvalue', 'Type', 'Magnitude')
+colnames(df_long) <- c('Eigenvalue', 'Lambda', 'Magnitude')
 
-ggplot(df_long, aes(x=Eigenvalue, y=Magnitude, colour=Type)) + geom_point() +
-  ggtitle(' ', subtitle = 'q = 3, t = 20, n = 20') 
+ggplot(df_long, aes(x=Eigenvalue, y=Magnitude, colour=Lambda)) + geom_point() +
+  ggtitle(' ', subtitle = 'q = 3, T = 20, n = 20') 
 
 
-ggplot(df, aes(x=Eigenvalue, y=Magnitude)) + geom_point() +
-  ggtitle('Number of parameter to estimate', subtitle = 'q=3, t = 20') 

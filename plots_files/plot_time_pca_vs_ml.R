@@ -1,5 +1,6 @@
 library(ggplot2)
 library("reshape2")
+load("simulated_data/diagonal_VCV_part1.RData")
 
 T <- 20
 
@@ -12,7 +13,7 @@ colnames(df_plot_long) <- c('n', 'Method', 'Time')
 
 ggplot(df_plot_long, aes(x=n, y=Time, colour=Method)) + geom_line() +
   ggtitle(' ',
-          subtitle = 'q = 3, t = 20, maximal optimizer iterations = 5, parallelized optimization') +
+          subtitle = 'q = 3, T = 20, maximal optimizer iterations = 5, parallelized optimization') +
   labs(fill = "Methods")
 
 
@@ -23,4 +24,4 @@ df_par <- data.frame(cbind(n_val, par))
 colnames(df_par) <- c('n', 'Parameter')
 
 ggplot(df_par, aes(x=n, y=Parameter)) + geom_line() +
-  ggtitle('Number of parameter to estimate', subtitle = 'q=3, t = 20') 
+  ggtitle('Number of parameter to estimate', subtitle = 'q=3, T = 20') 
