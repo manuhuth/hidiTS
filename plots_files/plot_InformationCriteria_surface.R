@@ -3,16 +3,6 @@ library(tidyr)
 library(plotly)
 load("hidiTS/simulated_data/Lambda1point2_only_pca.RData")
 
-
-#mse_diff_f <- as.matrix(abs(simulated_data$mse_pca_f - simulated_data$mse_ml_f))
-#mse_diff_f.1<- abs(simulated_data$mse_pca_f.1 - simulated_data$mse_ml_f.1)
-#mse_diff_f.2<- abs(simulated_data$mse_pca_f.2 - simulated_data$mse_ml_f.2)
-
-#simulated_data$mse_diff_f <- mse_diff_f
-#simulated_data$mse_diff_f.1 <- mse_diff_f.1
-#simulated_data$mse_diff_f.2 <- mse_diff_f.2
-
-#n <- 150, y = 100
 maxn <- 80
 maxt <- 80
 
