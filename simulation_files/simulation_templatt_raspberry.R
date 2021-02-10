@@ -40,7 +40,7 @@ if (econometrician == 'Marc'){
 
 
 
-  lamb <- 10
+  lamb <- 3
 
 
 
@@ -49,7 +49,7 @@ if (econometrician == 'Marc'){
 if (econometrician == 'Manu'){
 
 
-  lamb <- 0.01
+  lamb <- 0.5
 
 
 
@@ -66,13 +66,13 @@ seed_index <- 1
 simulated_data <- as.data.frame(c())
 start_time <- Sys.time()
 for (q in q_simulation) {# start for q
-  Gamma_sim <- diag(-sort(-runif(q, 0.2, 0.8)))
+
   for (T in T_simulation) {# start for T
     for (n in n_simulation) {# start for n
       save_iterations <- c()
 
 
-
+      Gamma_sim <- diag(-sort(-runif(q, 0.2, 0.8)))
       Lambda_sim <- matrix(runif(n*q, -lamb, lamb), n, q)
 
       for (iterations in 1:number_iterations){ # start for iterations
