@@ -5,8 +5,8 @@
 
 
 #-------------------Load Libraries-------------------------------------------------
-#devtools::install(dependencies = TRUE)
-devtools::install_github("manuhuth/hidiTS")
+devtools::install(dependencies = TRUE)
+#devtools::install_github("manuhuth/hidiTS")
 library(hidiTS)
 library(optimParallel)
 
@@ -17,7 +17,7 @@ econometrician <- 'Katrin' #either 'Katrin', 'Marc' or 'Manu'
 
 q_simulation <- c(3)            #vector of number of factors per data set
 T_simulation <- c(7,15,30,40,seq(50,300,50))  #vector of number of periods per data set
-n_simulation <- c(5,seq(10,40,10),seq(50,300,50))
+n_simulation <- c(5,10,seq(10,40,10),seq(50,300,50))
 
 number_iterations <- 1000       #number of observations per combination of (q, T, n)
 type_sigma_U <- 'Keks'
@@ -28,7 +28,7 @@ if (econometrician == 'Katrin'){
   print('Roses are red, model the shock, this code is gonna rock!')
 
 
-  lamb <- 1.2
+  lamb <- 3^0.5
 
 
 
@@ -66,11 +66,12 @@ seed_index <- 1
 simulated_data <- as.data.frame(c())
 start_time <- Sys.time()
 for (q in q_simulation) {# start for q
+  Gamma_sim <- diag(-sort(-runif(q, 0.3, 0.6)))
   for (T in T_simulation) {# start for T
     for (n in n_simulation) {# start for n
       save_iterations <- c()
 
-      Gamma_sim <- diag(-sort(-runif(q, 0.3, 0.6)))
+
 
       Lambda_sim <- matrix(runif(n*q, -lamb, lamb), n, q)
 
@@ -99,14 +100,22 @@ for (q in q_simulation) {# start for q
         #get all optimal estimates
         pca_bai_q <-ic_pca$number_BaiNg #Bai & NG optimal q pca
         pca_bic_q <- ic_pca$number_BIC #Bayesian optimal q pca
+        pca_bic_T_q <- ic_pca$number_BIC_t
+        pca_bic_nT_q <- ic_pca$number_BIC_nt
+
         ml_bai_q <- ic_pca$number_BaiNg #Bai & NG optimal q maximum likelihood
         ml_bic_q <- ic_pca$number_BIC #Bayesian optimal q maximum likelihood
 
         pca_bai_right = pca_bai_q == q
         pca_bic_right = pca_bic_q == q
+        pca_bic_T_right = pca_bic_T_q == q
+        pca_bic_nT_right = pca_bic_nT_q == q
+
+
+
         ml_bai_right = ml_bai_q == q
         ml_bic_right = ml_bic_q == q
-        bai_equals_bic <- pca_bai_q == pca_bic_q
+        bai_equals_bic <- pca_bai_q == pca_bic_nT_q
 
         true_f <- data$F
         true_lambda <- data$L[[1]]
@@ -172,7 +181,7 @@ for (q in q_simulation) {# start for q
         names(ev_named) <- c('ev1', 'ev2', 'ev3','ev4', 'ev5')
 
         #create vector to save over iterations
-        save_for_iterations <- c(ev_named,'pca_bai_right'=pca_bai_right,'pca_bic_right'=pca_bic_right,
+        save_for_iterations <- c(ev_named,'pca_bai_right'=pca_bai_right,'pca_bic_right'=pca_bic_right, 'pca_bic_T_right' = pca_bic_T_right, 'pca_bic_nT_right' = pca_bic_nT_right,
                                  'bic_equal_bai' = bai_equals_bic, mses, 'VE_pca_bic' =pca_bic_f_variance_explained, 'VE_pca_bai' = pca_bai_f_variance_explained,
                                  'VE_pca_trueq' = pca_trueq_f_variance_explained, 'mse_pca_bic_X_Xhat' = pca_bic_mse_X, 'mse_pca_bai_X_Xhat' = pca_bai_mse_X,
                                  'mse_pca_trueq_X_Xhat' = pca_trueq_mse_X, 'time_pca'=time_pca)
