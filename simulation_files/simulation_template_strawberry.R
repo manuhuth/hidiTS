@@ -182,7 +182,7 @@ df_final <- prep_data_hidi(df_no_na)
 n=nrow(df_final$X)
 t=ncol(df_final$X)
 
-IC_rslt <- Information.criteria.app(data=df_final,n=n,p=0,q=2,k=1,t=t,est.method = 1)
+IC_rslt <- Information.criteria.app(data=df_final,n=n,p=0,q=2,k=1,t=t,est.method = 1,kmax = 10)
 
 #setimate hidimodel
 pca_IC <- pca_estimator(df_final$X,IC_rslt$number_BaiNg) 
@@ -202,7 +202,7 @@ cor_matrix <- cor(t(res))
 
 #-------------------Specify Iterations and other Parameters------------------------
 
-econometrician <- 'Marc' #either 'Katrin', 'Marc' or 'Manu'
+econometrician <- 'Katrin' #either 'Katrin', 'Marc' or 'Manu'
 
 q_simulation <- seq(2,10,1)            #vector of number of factors per data set
 T_simulation <- c(t)  #vector of number of periods per data set
@@ -288,14 +288,22 @@ for (q in q_simulation) {# start for q
           #get all optimal estimates
           pca_bai_q <-ic_pca$number_BaiNg #Bai & NG optimal q pca
           pca_bic_q <- ic_pca$number_BIC #Bayesian optimal q pca
+          pca_bic_T_q <- ic_pca$number_BIC_t
+          pca_bic_nT_q <- ic_pca$number_BIC_nt
+          
           ml_bai_q <- ic_pca$number_BaiNg #Bai & NG optimal q maximum likelihood
           ml_bic_q <- ic_pca$number_BIC #Bayesian optimal q maximum likelihood
           
           pca_bai_right = pca_bai_q == q
           pca_bic_right = pca_bic_q == q
+          pca_bic_T_right = pca_bic_T_q == q
+          pca_bic_nT_right = pca_bic_nT_q == q
+          
+          
+          
           ml_bai_right = ml_bai_q == q
           ml_bic_right = ml_bic_q == q
-          bai_equals_bic <- pca_bai_q == pca_bic_q
+          bai_equals_bic <- pca_bai_q == pca_bic_nT_q
           
           true_f <- data$F
           true_lambda <- data$L[[1]]
@@ -361,7 +369,7 @@ for (q in q_simulation) {# start for q
           names(ev_named) <- c('ev1', 'ev2', 'ev3','ev4', 'ev5')
           
           #create vector to save over iterations
-          save_for_iterations <- c(ev_named,'pca_bai_right'=pca_bai_right,'pca_bic_right'=pca_bic_right,
+          save_for_iterations <- c(ev_named,'pca_bai_right'=pca_bai_right,'pca_bic_right'=pca_bic_right,'pca_bic_T_right' = pca_bic_T_right, 'pca_bic_nT_right' = pca_bic_nT_right,
                                    'bic_equal_bai' = bai_equals_bic, mses, 'VE_pca_bic' =pca_bic_f_variance_explained, 'VE_pca_bai' = pca_bai_f_variance_explained,
                                    'VE_pca_trueq' = pca_trueq_f_variance_explained, 'mse_pca_bic_X_Xhat' = pca_bic_mse_X, 'mse_pca_bai_X_Xhat' = pca_bai_mse_X,
                                    'mse_pca_trueq_X_Xhat' = pca_trueq_mse_X, 'time_pca'=time_pca)
@@ -387,3 +395,4 @@ for (q in q_simulation) {# start for q
   }# end for T
 }# end for q
 colnames(simulated_data) <- colname
+
