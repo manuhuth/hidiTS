@@ -7,17 +7,18 @@ Information.criteria <- function(data,n,p,q,k,t, est.method, kmax=8, ml_parallel
     r<-(p+1)*q
     g<-(n+t)/(n*t) *log(min(n,t))
     PC.IC <- function(num){
-      
-      g2<- (((n+t - num)* log(n*t))/n*t)
-      
+
+      g2<- (n+t-num) * log(n*t) / (n*t)
+
       pca_est <- pca_estimator(X=data$X,number = num)
+      #pca_est_max <- pca_estimator(X=data$X,number = kmax)
       rss<-sum(diag(t(data$X-(pca_est$Lambda%*%pca_est$F))%*%(data$X-(pca_est$Lambda%*%pca_est$F)))/(n*T))
-      bayesian <- log(n)*num + n*log(rss)
+      #rss_max<-sum(diag(t(data$X-(pca_est_max$Lambda%*%pca_est_max$F))%*%(data$X-(pca_est_max$Lambda%*%pca_est_max$F)))/(n*T))
+      bayesian <- log(n)/n * num  + log(rss)
       baing <- g*num + log(rss)
-      
-      bayesian_t <- log(t)*num + t*log(rss) 
-      bayesian_nt <- g2*num +log(rss) 
-      
+
+      bayesian_t <- log(t)/t * num  + log(rss)
+      bayesian_nt <- log(rss) + num*(g2)
       return(list(bayesian, baing, pca_est$F, pca_est$Lambda , bayesian_t, bayesian_nt))
 
     }
