@@ -7,34 +7,54 @@ Information.criteria <- function(data,n,p,q,k,t, est.method, kmax=8, ml_parallel
     r<-(p+1)*q
     g<-(n+t)/(n*t) *log(min(n,t))
     PC.IC <- function(num){
+      
+      g2<- (((n+t - num)* log(n*t))/n*t)
+      
       pca_est <- pca_estimator(X=data$X,number = num)
       rss<-sum(diag(t(data$X-(pca_est$Lambda%*%pca_est$F))%*%(data$X-(pca_est$Lambda%*%pca_est$F)))/(n*T))
       bayesian <- log(n)*num + n*log(rss)
       baing <- g*num + log(rss)
-      return(list(bayesian, baing, pca_est$F, pca_est$Lambda ))
+      
+      bayesian_t <- log(t)*num + t*log(rss) 
+      bayesian_nt <- g2*num +log(rss) 
+      
+      return(list(bayesian, baing, pca_est$F, pca_est$Lambda , bayesian_t, bayesian_nt))
 
     }
 
     output1<- sapply(1:kmax, PC.IC)
     BIC.PC<-unlist(output1[1,])
     BaiNg.PC<- unlist(output1[2,])
+    BIC_t.PC<- unlist(output1[5,]) 
+    BIC_nt.PC <- unlist(output1[6,])
 
     num.bic<- match(min(BIC.PC),BIC.PC)
     num.BaiNg<-match(min(BaiNg.PC),BaiNg.PC)
+    num.bic_t <- match(min(BIC_t.PC), BIC_t.PC) 
+    num.bic_nt <- match(min(BIC_nt.PC),BIC_nt.PC)
 
     F_hat_BIC<- output1[3,num.bic][[1]]
     Lambda_hat_BIC<-output1[4,num.bic][[1]]
 
     F_hat_BaiNg<-output1[3,num.BaiNg][[1]]
     Lambda_hat_BaiNg<- output1[4,num.BaiNg][[1]]
+    
+    
+    F_hat_BIC_t<-output1[3,num.bic_t][[1]]      
+    Lambda_hat_BIC_t<- output1[4,num.bic_t][[1]]
+    
+    F_hat_BIC_nt<-output1[3,num.bic_nt][[1]]      
+    Lambda_hat_BIC_nt<- output1[4,num.bic_nt][[1]]
 
     true_q<- nrow(data$F)
     F_true<- output1[3,true_q][[1]]
     Lambda_true<- output1[4,true_q][[1]]
 
-    return(list("true_q"=true_q, "number_BIC"=num.bic, "number_BaiNg"=num.BaiNg,"F_true"=F_true,
+    return(list("true_q"=true_q, "number_BIC"=num.bic, "number_BaiNg"=num.BaiNg, "number_BIC_t"=num.bic_t, 
+                "number_BIC_nt"=num.bic_nt,"F_true"=F_true,
                 "Lambda_true"=Lambda_true, "F_BIC"=F_hat_BIC, "Lambda_BIC"=Lambda_hat_BIC,
-                      "F_BaiNg"=F_hat_BaiNg, "Lambda_BaiNg"=Lambda_hat_BaiNg))
+                      "F_BaiNg"=F_hat_BaiNg, "Lambda_BaiNg"=Lambda_hat_BaiNg, "F_BIC_t"=F_hat_BIC_t,
+                "Lambda_BIC_t"= Lambda_hat_BIC_t, "F_BIC_nt"=F_hat_BIC_nt, "Lambda_BIC_nt"=Lambda_hat_BIC_nt))
 
   }else if(est.method==2){
 
