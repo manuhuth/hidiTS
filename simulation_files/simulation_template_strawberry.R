@@ -164,7 +164,7 @@ Information.criteria.app <- function(data,n,p,q,k,t, est.method, kmax=8, ml_para
 }
 
 
-df_paper=fredqd(date_end =as.Date(c("2014/12/01")), date_start=as.Date(c("1960/03/01")),transform = TRUE)
+df_paper=fredqd(date_end =as.Date(c("2019/12/01")), date_start=as.Date(c("1960/03/01")),transform = TRUE)
 
 # remove dates
 df_temp=df_paper[,2:(length(df_paper))]
@@ -205,8 +205,8 @@ cor_matrix <- cor(t(res))
 econometrician <- 'Marc' #either 'Katrin', 'Marc' or 'Manu'
 
 q_simulation <- seq(2,10,1)            #vector of number of factors per data set
-T_simulation <- c(220)  #vector of number of periods per data set
-n_simulation <- c(211)
+T_simulation <- c(t)  #vector of number of periods per data set
+n_simulation <- c(n)
 number_iterations <- 2       #number of observations per combination of (q, T, n)
 type_sigma_U <- 'Application'
 
