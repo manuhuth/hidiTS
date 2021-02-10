@@ -66,7 +66,7 @@ seed_index <- 1
 simulated_data <- as.data.frame(c())
 start_time <- Sys.time()
 for (q in q_simulation) {# start for q
-  Gamma_sim <- diag(-sort(-runif(q, 0.3, 0.6)))
+  Gamma_sim <- diag(-sort(-runif(q, 0.2, 0.8)))
   for (T in T_simulation) {# start for T
     for (n in n_simulation) {# start for n
       save_iterations <- c()
