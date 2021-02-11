@@ -27,7 +27,7 @@ if (econometrician == 'Katrin'){
   print('Roses are red, model the shock, this code is gonna rock!')
 
 
-lamb <- 1.2
+lamb <- 3^0.5
 
 
 
@@ -39,7 +39,7 @@ if (econometrician == 'Marc'){
 
 
 
-lamb <- 10
+lamb <- 3
 
 
 
@@ -48,7 +48,7 @@ lamb <- 10
 if (econometrician == 'Manu'){
 
 
-lamb <- 0.01
+lamb <- 0.5
 
 
 
@@ -69,7 +69,7 @@ for (q in q_simulation) {# start for q
     for (n in n_simulation) {# start for n
       save_iterations <- c()
 
-      Gamma_sim <- diag(-sort(-runif(q, 0.3, 0.6)))
+      Gamma_sim <- diag(-sort(-runif(q, 0.2, 0.8)))
 
       Lambda_sim <- matrix(runif(n*q, -lamb, lamb), n, q)
 
