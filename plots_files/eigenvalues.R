@@ -2,7 +2,7 @@ library(ggplot2)
 library("reshape2")
 library(ggpubr)
 
-#load()
+load("simulated_data/raspberry_paper_medium_lambda.RData")
 
 df <- simulated_data[c("ev1","ev2" ,"ev3","ev4", "ev5", 'n', 'T' )]
 for (index in 1:5) {
@@ -24,17 +24,17 @@ for (index in 1:length(Ts)) {
 
 t7 <- ggplot(list_df[[1]], aes(x=n, y=Magnitude, fill=Eigenvalue)) +
               geom_bar(stat="identity", width = width, position=position_dodge())+
-              scale_fill_brewer(palette="Paired") + ggtitle('T=7')
+              scale_fill_brewer(palette="Paired") + ggtitle('T=7') + theme(text = element_text(size=20))
 
 t15 <- ggplot(list_df[[2]], aes(x=n, y=Magnitude, fill=Eigenvalue)) +
   geom_bar(stat="identity",width = width, position=position_dodge())+
-  scale_fill_brewer(palette="Paired") + ggtitle('T=15')
+  scale_fill_brewer(palette="Paired") + ggtitle('T=15') + theme(text = element_text(size=20)) + ylab('')
 
 t30 <- ggplot(list_df[[3]], aes(x=n, y=Magnitude, fill=Eigenvalue)) +
   geom_bar(stat="identity",width = width, position=position_dodge())+
-  scale_fill_brewer(palette="Paired") + ggtitle('T=30')
+  scale_fill_brewer(palette="Paired") + ggtitle('T=30') + theme(text = element_text(size=20))
 t100 <- ggplot(list_df[[4]], aes(x=n, y=Magnitude, fill=Eigenvalue)) +
   geom_bar(stat="identity",width = width, position=position_dodge())+
-  scale_fill_brewer(palette="Paired") + ggtitle('T=100')
+  scale_fill_brewer(palette="Paired") + ggtitle('T=100') + theme(text = element_text(size=20)) + ylab('')
 
 figure <- ggarrange(t7,t15,t30,t100, ncol = 2, nrow=2, common.legend = TRUE, legend="bottom")
