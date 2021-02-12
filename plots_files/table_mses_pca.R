@@ -1,7 +1,7 @@
 #Latex table MSES
 library(xtable)
 
-load("simulated_data/raspberry_paper_medium_lambda.RData")
+load("simulated_data/raspberry_paper_medium_lambda_ext.RData")
 
 sim_data_medium <- simulated_data[!duplicated(simulated_data[c('n','T')]),]
 
@@ -14,7 +14,7 @@ data_medium <- sim_data_medium[ which(sim_data_medium$T %in% Ts
 ics_medium <- data_medium[,c('mse_pca_f', 'mse_pca_f.1', 'mse_pca_f.2')]
 names(ics_medium) <- c('factor1', 'factor2', 'factor3')
 
-load("simulated_data/raspberry_paper_small_lambda.RData")
+load("simulated_data/raspberry_paper_small_lambda_ext.RData")
 sim_data_small <- simulated_data[!duplicated(simulated_data[c('n','T')]),]
 
 data_small <- sim_data_small[ which(sim_data_small$T %in% Ts

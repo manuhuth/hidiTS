@@ -1,4 +1,5 @@
-load("simulated_data/blueberry_small_lambda.RData")
+library(xtable)
+load("simulated_data/blueberry_paper_small_lambda.RData")
 simulated_data['mse_diff_f'] <- simulated_data$mse_pca_f-simulated_data$mse_ml_f
 simulated_data['mse_diff_f.1'] <- simulated_data$mse_pca_f.1-simulated_data$mse_ml_f.1
 simulated_data['mse_diff_f.2'] <- simulated_data$mse_pca_f.2-simulated_data$mse_ml_f.2
@@ -15,7 +16,7 @@ names(ics_medium) <- c('factor1', 'factor2', 'factor3')
 
 
 
-load("simulated_data/blueberry_small_lambda.RData")
+load("simulated_data/blueberry_paper_medium_lambda.RData")
 simulated_data['mse_diff_f'] <- simulated_data$mse_pca_f-simulated_data$mse_ml_f
 simulated_data['mse_diff_f.1'] <- simulated_data$mse_pca_f.1-simulated_data$mse_ml_f.1
 simulated_data['mse_diff_f.2'] <- simulated_data$mse_pca_f.2-simulated_data$mse_ml_f.2
