@@ -37,7 +37,7 @@ df['IC'][df['IC'] == 2] <- 'BIC_T'
 df['IC'][df['IC'] == 3] <- 'BIC_nT'
 #df['IC'][df['IC'] == 4] <- 'BNIC'
 
-(fig1 <- ggplot(df[1:200,], aes(x=r, y=mean,  color=IC)) + geom_line() +
+(fig1 <- ggplot(df, aes(x=r, y=mean,  color=IC)) + geom_line() +
   geom_ribbon(aes(x=r, ymin=low, ymax=high, color=IC),linetype=2, alpha = 0.2) +
   scale_color_manual(
     values = c(BIC_n="#F8766D", BIC_nT="#619CFF", BIC_T="#00BA38"))  +
