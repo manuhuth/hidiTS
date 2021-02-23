@@ -37,16 +37,16 @@ df['IC'][df['IC'] == 2] <- 'BIC_T'
 df['IC'][df['IC'] == 3] <- 'BIC_nT'
 #df['IC'][df['IC'] == 4] <- 'BNIC'
 
-(fig1 <- ggplot(df, aes(x=r, y=mean,  color=IC)) + geom_line() +
+(fig1 <- ggplot(df[1:200,], aes(x=r, y=mean,  color=IC)) + geom_line() +
   geom_ribbon(aes(x=r, ymin=low, ymax=high, color=IC),linetype=2, alpha = 0.2) +
   scale_color_manual(
     values = c(BIC_n="#F8766D", BIC_nT="#619CFF", BIC_T="#00BA38"))  +
-  theme(text = element_text(size=28), legend.position="bottom") + labs(color='') ) + ylab('value')
+  theme(text = element_text(size=28), legend.position="bottom") + labs(color='') ) + ylab('Value')
 ggsave("static/simulation_BICs_full.png")
 
 
 
-df2 <- as.data.frame(rbind(BIC_n_df_plot[1:7,], BIC_T_df_plot[1:7,], BIC_nT_df_plot[1:7,]))
+df2 <- as.data.frame(rbind(BIC_n_df_plot[1:20,], BIC_T_df_plot[1:20,], BIC_nT_df_plot[1:20,]))
 df2['IC'][df2['IC'] == 1] <- 'BIC_n'
 df2['IC'][df2['IC'] == 2] <- 'BIC_T'
 df2['IC'][df2['IC'] == 3] <- 'BIC_nT'
@@ -56,19 +56,19 @@ df2['IC'][df2['IC'] == 3] <- 'BIC_nT'
     geom_ribbon(aes(x=r, ymin=low, ymax=high, color=IC),linetype=2, alpha = 0.2) +
     scale_color_manual(
       values = c(BIC_n="#F8766D", BIC_nT="#619CFF", BIC_T="#00BA38"))  +
-    theme(text = element_text(size=28), legend.position="bottom") + labs(color='') ) + ylab('value')
+    theme(text = element_text(size=28), legend.position="bottom") + labs(color='') ) + ylab('Value')
 ggsave("static/simulation_BICs_n20.png")
 
 
-(fig3 <- ggplot(BNIC_df_plot, aes(x=r, y=mean,  lty = 'BNIC')) + geom_line() +
+(fig3 <- ggplot(BNIC_df_plot[1:200,], aes(x=r, y=mean,  lty = 'BNIC')) + geom_line() +
     geom_ribbon(aes(x=r, ymin=low, ymax=high),linetype=2, alpha = 0.2) +
-    theme(text = element_text(size=28), legend.position="bottom") + scale_linetype('')  + ylab('value'))
+    theme(text = element_text(size=28), legend.position="bottom") + scale_linetype('')  + ylab('Value'))
 ggsave("static/simulation_BNIC_full.png")
 
-df_BNIC_n20 <- BNIC_df_plot[1:7,]
+df_BNIC_n20 <- BNIC_df_plot[1:20,]
 (fig4 <- ggplot(df_BNIC_n20, aes(x=r, y=mean,  lty = 'BNIC')) + geom_line() +
     geom_ribbon(aes(x=r, ymin=low, ymax=high),linetype=2, alpha = 0.2) +
-    theme(text = element_text(size=28), legend.position="bottom") + scale_linetype('')  + ylab('value'))
+    theme(text = element_text(size=28), legend.position="bottom") + scale_linetype('')  + ylab('Value'))
 ggsave("static/simulation_BNIC_n20.png")
 
 
