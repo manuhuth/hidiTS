@@ -63,7 +63,7 @@ for (r in 1:n){
   BIC_n <- RSS_part + r * log(n)/n
   BIC_T <- RSS_part + r * log(T)/T
   BIC_nT <- RSS_part + r * log(n*T)/n/T * (n+T-r)
-  BNIC <- RSS_part + r *  r * log(min(n,T))/n/T * (n+T)
+  BNIC <- RSS_part + r *   log(min(n,T))/n/T * (n+T)
 
   ic_BIC_n[r]  <- BIC_n
   ic_BIC_T[r]  <-  BIC_T
