@@ -133,9 +133,9 @@ start_seed_PCA <- 1
     #-------------------------------------------------------------------------------------------------
 
     #--------------set_up---------------------------
-    eigenvalues_to_be_plotted <- 5 #must be smaller than smallest value of n_simulation_PCA in line 63
-    ns <- c(5, 50, 100) # must be subset of n_simulation_PCA in line 63
-    Ts <- c(7, 50, 100) # must be subset of T_simulation_PCA in line 64, at least 3 arguments should be supplied to ensure smooth running of the code
+    eigenvalues_to_be_plotted <- 5 #must be smaller than smallest value of n_simulation_PCA in line 3
+    ns <- c(5, 50, 100) # must be subset of n_simulation_PCA in line 3
+    Ts <- c(7, 50, 100) # must be subset of T_simulation_PCA in line 74, at least 3 arguments should be supplied to ensure smooth running of the code
     #-----------------------------------------------
         width <- 0.6
         df <- df_pca_b_low[c("ev1","ev2" ,"ev3","ev4", "ev5", 'n', 'T' )]
@@ -234,8 +234,8 @@ start_seed_PCA <- 1
     #-------------------------------------------------------------------------------------------------
 
     #--------------set_up---------------------------
-    ns <-  c(5, 50, 100) # must be subset of n_simulation_PCA in line 63
-    Ts <-  c(7, 50, 100) # must be subset of T_simulation_PCA in line 64
+    ns <-  c(5, 50, 100) # must be subset of n_simulation_PCA in line 73
+    Ts <-  c(7, 50, 100) # must be subset of T_simulation_PCA in line 74
     #-----------------------------------------------
 
         sim_data_medium <- df_pca_b_medium[!duplicated(df_pca_b_medium[c('n','T')]),]
@@ -265,7 +265,7 @@ start_seed_PCA <- 1
     #-------------------------------------------------------------------------------------------------
 
     #--------------set_up---------------------------
-    Ts <-  c(7,50,100) # must be subset of T_simulation_PCA in line 64
+    Ts <-  c(7,50,100) # must be subset of T_simulation_PCA in line 74
     #-----------------------------------------------
 
         list_MSE_plots_low_b <- MSE_plots(df_pca_b_low, Ts = Ts)
@@ -289,8 +289,8 @@ start_seed_PCA <- 1
     #-------------------------------------------------------------------------------------------------
 
     #--------------set_up---------------------------
-    ns <-  c(5, 50, 100) #must be subset of n_simulation_PCA in line 63
-    Ts <-  c(7, 50, 100) #must be subset of T_simulation_PCA in line 64
+    ns <-  c(5, 50, 100) #must be subset of n_simulation_PCA in line 73
+    Ts <-  c(7, 50, 100) #must be subset of T_simulation_PCA in line 74
     #-----------------------------------------------
 
         sim_data_medium <- df_pca_b_medium[!duplicated(df_pca_b_medium[c('n','T')]),]
@@ -316,7 +316,7 @@ start_seed_PCA <- 1
     #-------------------------------------------------------------------------------------------------
 
     #--------------set_up---------------------------
-    Ts <-  c(20) # must be subset of T_simulation_PCA in line 64
+    Ts <-  c(20) # must be subset of T_simulation_PCA in line 74
     start_seed <- 1
     number_samples_time <- 2
     number_of_signals <- c(5, 10, 20)
@@ -507,7 +507,7 @@ start_seed_PCA <- 1
             ic_BIC_T[r]  <-  BIC_T
             ic_BIC_nT[r]  <-  BIC_nT
             ic_BNIC[r]  <- BNIC
-            print(paste('sample=', index, ' r=',r, sep=''))
+            print(paste('sample=', index, 'r=',r, sep=''))
           }
 
           BIC_n_df <- rbind(BIC_n_df, ic_BIC_n)
