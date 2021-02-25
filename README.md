@@ -1,4 +1,4 @@
-# High-Dimensional Time Series
+# Dynamic Factor Modeling
 We evaluate methods and conduct simulation studies for high-dimensional time series models. (more sophisticated description) 
 
 ## Continous integration with Travis CI to ensure Reproducibility
