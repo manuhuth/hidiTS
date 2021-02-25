@@ -5,21 +5,27 @@
 #-------------------------------------------------------------------------------------------------#
 
 
+# Install Packages if Necessary
+#-------------------------------------------------------------------------------------------------
+list_packages <- c("optimParallel", "ggplot2", "xtable", "reshape2",
+                   "ggpubr", "plotly", "tidyr", "fbi", "devtools")
+new_packages <- list_packages[!(list_packages %in% installed.packages()[,"Package"])]
+if(length(new_packages)) install.packages(new_packages)
+
+
 # Load Packages
 #-------------------------------------------------------------------------------------------------
-install.packages("devtools") #load/install
-devtools::install_github("manuhuth/hidiTS")
-
+library(devtools)
+install_github("manuhuth/hidiTS")
 library(hidiTS)
-
-library(optimParallel) #load/install
-library(ggplot2) #load/install
-library(xtable) #load/install
-library(reshape2) #load/install
-library(ggpubr) #load/install
-library(plotly) #load/install
-library(tidyr) #load/install
-library(fbi) #load/install
+library(optimParallel)
+library(ggplot2)
+library(xtable)
+library(reshape2)
+library(ggpubr)
+library(plotly)
+library(tidyr)
+library(fbi)
 
 
 # Prepare Multi Core Work
