@@ -1,6 +1,6 @@
 #-------------------------------------------------------------------------------------------------#
 #                                                                                                 #
-#                                           Simulation Study                                      #
+#                                           Replicate the Paper                                   #
 #                                                                                                 #
 #-------------------------------------------------------------------------------------------------#
 
@@ -19,6 +19,7 @@ library(reshape2) #load/install
 library(ggpubr) #load/install
 library(plotly) #load/install
 library(tidyr) #load/install
+library(fbi) #load/install
 
 
 # Prepare Multi Core Work
@@ -311,14 +312,204 @@ setDefaultCluster(cl = cl)
       theme(text = element_text(size=28))
 
 
+# 4. - Application
+#-------------------------------------------------------------------------------------------------
+rm(list = ls())
+
+
+    # 4.1 - Figure 4 a)/b) & Figure 10
+    #-------------------------------------------------------------------------------------------------
+    prep_data_hidi <- function(data){
+
+      data_hidi <- as.matrix(t(data))
+
+
+      output <- list("data_fbi"= data, "X"=data_hidi )
+
+      return(output)
+    }
+
+
+    df_paper=fredqd(date_end =as.Date(c("1985/12/01")), date_start=as.Date(c("1960/03/01")),transform = TRUE)
+
+    # remove dates
+    df_temp=df_paper[,2:(length(df_paper))]
+
+    #drop Nas
+    Na_names <- colnames(df_temp)[colSums(is.na(df_temp)) > 0]
+    df_colnames <- colnames(df_temp)
+    col_keeps <- setdiff(df_colnames,Na_names)
+    df_no_na <- subset(df_temp, select=(col_keeps))
+
+    df_final <- prep_data_hidi(df_no_na)
+
+
+    X <- df_final$X
+
+    T <- ncol(X)
+    n <- nrow(X)
+
+
+    ic_BIC_n  <- c()
+    ic_BIC_T  <- c()
+    ic_BIC_nT  <- c()
+    ic_BNIC  <- c()
+
+    for (r in 1:n){
+      pca_est <- pca_estimator(X, r)
+      f_hat <- pca_est$F
+      l_hat <- pca_est$Lambda
+      x_hat <- l_hat %*% f_hat
+      u_hat <- X - x_hat
+      RSS <- sum(u_hat^2)
+
+      RSS_part <- log(RSS/n/T)
+
+      BIC_n <- RSS_part + r * log(n)/n
+      BIC_T <- RSS_part + r * log(T)/T
+      BIC_nT <- RSS_part + r * log(n*T)/n/T * (n+T-r)
+      BNIC <- RSS_part + r * log(min(n,T))/n/T * (n+T)
+
+      ic_BIC_n[r]  <- BIC_n
+      ic_BIC_T[r]  <-  BIC_T
+      ic_BIC_nT[r]  <-  BIC_nT
+      ic_BNIC[r]  <- BNIC
+      print(paste(' r=',r, sep=''))
+    }
+
+    df <- cbind(ic_BIC_n, ic_BIC_T, ic_BIC_nT)[1:200,]
+
+    colnames(df) <- c('BIC_n', 'BIC_T', 'BIC_nT')
+
+    df_long <- melt(df)
+    colnames(df_long) <- c('r', 'IC', 'Value')
+    (figure1 <- ggplot(df_long, aes(x=r, y=Value, color=IC)) + geom_line() +
+        theme(text = element_text(size=28), legend.position="bottom") + labs(color='') )
+    ggsave("static/application_BICs_full.png")
+
+    df_long2 <- melt(df[1:20,])
+    colnames(df_long2) <- c('r', 'IC', 'Value')
+    (figure2 <- ggplot(df_long2, aes(x=r, y=Value, color=IC)) + geom_line() + geom_point() +
+        theme(text = element_text(size=28), legend.position="bottom") + labs(color='') )
+    ggsave("static/application_BICs_n20.png")
+
+    (figure3 <- ggplot(as.data.frame(cbind('BNIC'=ic_BNIC, 'r'=1:n)[1:200,]), aes(x=r, y=BNIC, lty = 'BNIC')) +
+        geom_line()  + theme(text = element_text(size=28), legend.position="bottom") + ylab('Value') + scale_linetype(''))
+    ggsave("static/application_Bai_full.png")
+
+    (figure4 <- ggplot(as.data.frame(cbind('BNIC'=ic_BNIC, 'r'=1:n)[1:20,]), aes(x=r, y=BNIC, lty = 'BNIC')) +
+        geom_line() + geom_point() + theme(text = element_text(size=28), legend.position="bottom") + ylab('Value')+ scale_linetype(''))
+    ggsave("static/application_Bai_n20.png")
 
 
 
 
+    # 4.2 - Figure 4 c)/D) & Figure 11
+    #-------------------------------------------------------------------------------------------------
+    set.seed(1)
+    n <- 211
+    T <- 104
+    q <- 10
+
+    BIC_n_df <- c()
+    BIC_T_df <- c()
+    BIC_nT_df <- c()
+    BNIC_df <- c()
+
+    for (index in 1:1000) {
+      data <- sim_data(p = n, T = T, dim_F= q, lags_F=1, lags_X=0, ar_F=1, ar_Y=1, low_X = -3^0.5, up_X = 3^0.5,
+                       low_F = 0.3, up_F = 0.6, burn_in = 20, data_only = FALSE, only_stationary = TRUE, vcv_mu = diag(n),
+                       adjust_diag = FALSE, geometric_F =TRUE, diag_F = TRUE, geometric_X =FALSE, geometric_Y =FALSE)
+
+      X <- data$X
+      ic_BIC_n  <- c()
+      ic_BIC_T  <- c()
+      ic_BIC_nT  <- c()
+      ic_BNIC  <- c()
+
+      for (r in 1:n){
+        pca_est <- pca_estimator(X, r)
+        f_hat <- pca_est$F
+        l_hat <- pca_est$Lambda
+        x_hat <- l_hat %*% f_hat
+        u_hat <- X - x_hat
+        RSS <- sum(u_hat^2)
+        RSS_part <- log(RSS/n/T)
+
+        BIC_n <- RSS_part + r * log(n)/n
+        BIC_T <- RSS_part + r * log(T)/T
+        BIC_nT <- RSS_part + r * log(n*T)/n/T * (n+T-r)
+        BNIC <- RSS_part + r * log(min(n,T))/n/T * (n+T)
+
+        ic_BIC_n[r]  <- BIC_n
+        ic_BIC_T[r]  <-  BIC_T
+        ic_BIC_nT[r]  <-  BIC_nT
+        ic_BNIC[r]  <- BNIC
+        print(paste('sample=', index, ' r=',r, sep=''))
+      }
+
+      BIC_n_df <- rbind(BIC_n_df, ic_BIC_n)
+      BIC_T_df <- rbind(BIC_T_df, ic_BIC_T)
+      BIC_nT_df <- rbind(BIC_nT_df, ic_BIC_nT)
+      BNIC_df <- rbind(BNIC_df, ic_BNIC)
+    }
+
+    alpha = 0.1
+    up <- 1 - alpha/2
+    low <-  alpha/2
+
+    mean_n <- colMeans(BIC_n_df)
+    high_n <- apply(BIC_n_df, 2, quantile, up)
+    low_n <- apply(BIC_n_df, 2, quantile, low)
+    BIC_n_df_plot <- cbind('low'=low_n, 'mean'=mean_n, 'high'=high_n, 'r'= 1:n, 'IC' = rep(1, n) )
+
+    mean_T <- colMeans(BIC_T_df)
+    high_T <- apply(BIC_T_df, 2, quantile, up)
+    low_T <- apply(BIC_T_df, 2, quantile, low)
+    BIC_T_df_plot <-cbind('low'=low_T, 'mean'=mean_T, 'high'=high_T, 'r'= 1:n, 'IC' = rep(2, n) )
+
+    mean_nT <- colMeans(BIC_nT_df)
+    high_nT <- apply(BIC_nT_df, 2, quantile, up)
+    low_nT <- apply(BIC_nT_df, 2, quantile, low)
+    BIC_nT_df_plot <- cbind('low'=low_nT, 'mean'=mean_nT, 'high'=high_nT, 'r'= 1:n, 'IC' = rep(3, n) )
+
+    mean_bai <- colMeans(BNIC_df)
+    high_bai <- apply(BNIC_df, 2, quantile, up)
+    low_bai <- apply(BNIC_df, 2, quantile, low)
+    BNIC_df_plot <- as.data.frame(cbind('low'=low_bai, 'mean'=mean_bai, 'high'=high_bai, 'r'= 1:n))
+
+    df <- as.data.frame(rbind(BIC_n_df_plot[1:200,], BIC_T_df_plot[1:200,], BIC_nT_df_plot[1:200,]))
+    df['IC'][df['IC'] == 1] <- 'BIC_n'
+    df['IC'][df['IC'] == 2] <- 'BIC_T'
+    df['IC'][df['IC'] == 3] <- 'BIC_nT'
+    #df['IC'][df['IC'] == 4] <- 'BNIC'
+
+    (fig1 <- ggplot(df, aes(x=r, y=mean,  color=IC)) + geom_line() +
+        geom_ribbon(aes(x=r, ymin=low, ymax=high, color=IC),linetype=2, alpha = 0.2) +
+        scale_color_manual(
+          values = c(BIC_n="#F8766D", BIC_nT="#619CFF", BIC_T="#00BA38"))  +
+        theme(text = element_text(size=28), legend.position="bottom") + labs(color='') ) + ylab('Value')
 
 
+    df2 <- as.data.frame(rbind(BIC_n_df_plot[1:20,], BIC_T_df_plot[1:20,], BIC_nT_df_plot[1:20,]))
+    df2['IC'][df2['IC'] == 1] <- 'BIC_n'
+    df2['IC'][df2['IC'] == 2] <- 'BIC_T'
+    df2['IC'][df2['IC'] == 3] <- 'BIC_nT'
+    #df2['IC'][df2['IC'] == 4] <- 'BNIC'
+
+    (fig2 <- ggplot(df2, aes(x=r, y=mean,  color=IC)) + geom_line() +
+        geom_ribbon(aes(x=r, ymin=low, ymax=high, color=IC),linetype=2, alpha = 0.2) +
+        scale_color_manual(
+          values = c(BIC_n="#F8766D", BIC_nT="#619CFF", BIC_T="#00BA38"))  +
+        theme(text = element_text(size=28), legend.position="bottom") + labs(color='') ) + ylab('Value')
 
 
+    (fig3 <- ggplot(BNIC_df_plot[1:200,], aes(x=r, y=mean,  lty = 'BNIC')) + geom_line() +
+        geom_ribbon(aes(x=r, ymin=low, ymax=high),linetype=2, alpha = 0.2) +
+        theme(text = element_text(size=28), legend.position="bottom") + scale_linetype('')  + ylab('Value'))
 
 
-
+    df_BNIC_n20 <- BNIC_df_plot[1:20,]
+    (fig4 <- ggplot(df_BNIC_n20, aes(x=r, y=mean,  lty = 'BNIC')) + geom_line() +
+        geom_ribbon(aes(x=r, ymin=low, ymax=high),linetype=2, alpha = 0.2) +
+        theme(text = element_text(size=28), legend.position="bottom") + scale_linetype('')  + ylab('Value'))
