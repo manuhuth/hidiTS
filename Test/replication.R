@@ -8,7 +8,7 @@
 # Install Packages if Necessary
 #-------------------------------------------------------------------------------------------------
 list_packages <- c("optimParallel", "ggplot2", "xtable", "reshape2",
-                   "ggpubr", "plotly", "tidyr", "fbi", "devtools", "rlang", "broom")
+                   "ggpubr", "plotly", "tidyr", "devtools", "rlang", "broom")
 new_packages <- list_packages[!(list_packages %in% installed.packages()[,"Package"])]
 if(length(new_packages)) install.packages(new_packages)
 
@@ -17,6 +17,7 @@ if(length(new_packages)) install.packages(new_packages)
 #-------------------------------------------------------------------------------------------------
 library(devtools) #needed to install from GitHUb
 install_github("manuhuth/hidiTS") #load our self written package hidiTS from GitHUb
+install_github("cykbennie/fbi")
 
 
 library(hidiTS) #must be run seperately from line 19, load our self written package that contains all functions
@@ -387,8 +388,8 @@ start_seed_PCA <- 1
         }
 
 
-        df_paper=fredqd(date_end =as.Date(c("1985/12/01")), date_start=as.Date(c("1960/03/01")),transform = TRUE)
-
+        df_paper=fredqd(file='https://s3.amazonaws.com/files.fred.stlouisfed.org/fred-md/quarterly/current.csv', #load data set from McCracken's Website
+                        date_end =as.Date(c("1985/12/01")), date_start=as.Date(c("1960/03/01")),transform = TRUE)
         # remove dates
         df_temp=df_paper[,2:(length(df_paper))]
 
