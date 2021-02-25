@@ -16,8 +16,9 @@ if(length(new_packages)) install.packages(new_packages)
 # Load Packages
 #-------------------------------------------------------------------------------------------------
 library(devtools)
-install_github("manuhuth/hidiTS")
-library(hidiTS)
+install_github("manuhuth/hidiTS") #devtools needed to execute this line
+library(hidiTS) #our written package containing all functions
+
 library(optimParallel)
 library(ggplot2)
 library(xtable)
