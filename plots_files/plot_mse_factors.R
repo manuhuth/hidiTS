@@ -1,10 +1,11 @@
 library(ggplot2)
 library("reshape2")
 library(ggpubr)
-load("C:/Users/Mhuth/Desktop/hidiTS/simulated_data/Lambda1point2_only_pca.RData")
-
+load("C:/Users/MCker/Desktop/data_paper/raspberry_paper_small_lambda_ext.RData")
+#C:\Users\MCker\Desktop\data_paper
+#+ylab("")
 Ts <- unique(simulated_data$T)
-Ts <- c(7,15,30, 50, 100, 300)
+Ts <- c(7,15,30, 50, 100,300)
 
 df <- simulated_data[c('mse_pca_f','n', 'T' )]
 colnames(df) <- c('MSE', 'n', 'T')
@@ -19,8 +20,13 @@ colnames(df) <- c('n', names)
 df_long <- melt(df, id = 'n')
 colnames(df_long) <- c('n', 'Periods', 'MSE')
 
-figure1 <- ggplot(df_long, aes(x=n, y=MSE, color=Periods)) + geom_line()
-ggsave("C:/Users/Mhuth/Desktop/hidiTS/static/plot_mse_factor1.png")
+figure1 <- ggplot(df_long, aes(x=n, y=MSE, color=Periods)) +theme(axis.text=element_text(size=20),
+                                                                  axis.title=element_text(size=20),
+                                                                  legend.title = element_text(size = 20),
+                                                                  legend.text = element_text(size = 20),
+                                                                  legend.position="bottom") + geom_line()
+
+ggsave("C:/Users/MCker/Desktop/data_paper/plots_small/plot_mse_factor1_small.png", width=5.5, height=3)
 
 
 #----------fig3-------------------------------------------------
@@ -37,8 +43,13 @@ colnames(df) <- c('n', names)
 df_long <- melt(df, id = 'n')
 colnames(df_long) <- c('n', 'Periods', 'MSE')
 
-figure2 <- ggplot(df_long, aes(x=n, y=MSE, color=Periods)) + geom_line()
-ggsave("C:/Users/Mhuth/Desktop/hidiTS/static/plot_mse_factor2.png")
+figure2 <- ggplot(df_long, aes(x=n, y=MSE, color=Periods)) +theme(axis.text=element_text(size=20),
+                                                                  axis.title=element_text(size=20),
+                                                                  legend.title = element_text(size = 20),
+                                                                  legend.text = element_text(size = 20),
+                                                                  legend.position="bottom") + geom_line()
+
+ggsave("C:/Users/MCker/Desktop/data_paper/plots_small/plot_mse_factor2_small.png",width=5.5, height=3)
 
 
 #----------fig3-------------------------------------------------
@@ -55,5 +66,10 @@ colnames(df) <- c('n', names)
 df_long <- melt(df, id = 'n')
 colnames(df_long) <- c('n', 'Periods', 'MSE')
 
-figure1 <- ggplot(df_long, aes(x=n, y=MSE, color=Periods)) + geom_line()
-ggsave("C:/Users/Mhuth/Desktop/hidiTS/static/plot_mse_factor3.png")
+figure3 <- ggplot(df_long, aes(x=n, y=MSE, color=Periods)) +theme(axis.text=element_text(size=20),
+                                                                  axis.title=element_text(size=20),
+                                                                  legend.title = element_text(size = 20),
+                                                                  legend.text = element_text(size = 20),
+                                                                  legend.position="bottom") + geom_line()
+
+ggsave("C:/Users/MCker/Desktop/data_paper/plots_small/plot_mse_factor3_small.png",width=5.5, height=3)
