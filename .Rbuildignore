@@ -1,2 +1,3 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
+use_build_ignore(c("Test/replication.R","Test/run_code_fast.R"), escape = TRUE)
